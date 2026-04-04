@@ -5,99 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scanner Pagar Pro | Attend-X</title>
     
-    <script src="https://cdn.jsdelivr.net/npm/instascan@1.0.0/build/instascan.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Plus+Jakarta+Sans:wght@400;600&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --neon-blue: #6366f1;
-            --dark-bg: #020617;
-            --card-bg: rgba(30, 41, 59, 0.5);
-        }
-
-        body { 
-            background: var(--dark-bg); 
-            color: white; 
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .header-section {
-            padding: 20px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(10px);
-        }
-
-        .v-container { 
-            border: 4px solid var(--neon-blue); 
-            border-radius: 40px; 
-            position: relative; 
-            overflow: hidden; 
+        :root { --neon-blue: #6366f1; --dark-bg: #020617; }
+        body { background: var(--dark-bg); color: white; font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; overflow: hidden; }
+        
+        .header-section { padding: 20px 0; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); }
+        
+        /* Container Scanner */
+        #reader { 
+            width: 100%; 
             max-width: 500px; 
             margin: 0 auto; 
-            background: #000;
+            border: 4px solid var(--neon-blue) !important; 
+            border-radius: 30px !important; 
+            overflow: hidden;
             box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
-            aspect-ratio: 4/3;
+            background: #000;
         }
 
-        video { width: 100%; height: 100%; object-fit: cover; }
-
-        .scan-anim { 
-            width: 100%; 
-            height: 4px; 
-            background: var(--neon-blue); 
-            position: absolute; 
-            top: 0;
-            z-index: 10;
-            animation: scan 3s infinite ease-in-out; 
-            box-shadow: 0 0 20px var(--neon-blue); 
+        /* Sorokkan butang & teks dalaman library */
+        #reader__dashboard, #reader__status_span { background: transparent !important; border: none !important; color: #94a3b8 !important; }
+        #reader button { 
+            background: var(--neon-blue) !important; 
+            color: white !important; 
+            border: none !important; 
+            padding: 10px 20px !important; 
+            border-radius: 10px !important; 
+            font-weight: bold !important;
+            margin: 10px 0 !important;
         }
 
-        @keyframes scan {
-            0% { top: 0; opacity: 0; }
-            50% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
-        }
-
-        .log-box { 
-            background: var(--card-bg); 
-            border-radius: 30px; 
-            height: 70vh; 
-            overflow-y: auto; 
-            padding: 20px; 
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-        }
-
-        .attendance-card {
-            background: rgba(15, 23, 42, 0.8);
-            border-radius: 20px;
-            padding: 15px 20px;
-            margin-bottom: 12px;
-            border-left: 6px solid #10b981;
-            transition: all 0.3s ease;
-        }
-
+        .log-box { background: rgba(30, 41, 59, 0.5); border-radius: 30px; height: 70vh; overflow-y: auto; padding: 20px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .attendance-card { background: rgba(15, 23, 42, 0.9); border-radius: 20px; padding: 15px 20px; margin-bottom: 12px; border-left: 6px solid #10b981; }
         .attendance-card.lewat { border-left-color: #ef4444; }
-
-        .system-title {
-            font-family: 'Orbitron', sans-serif;
-            letter-spacing: 2px;
-            color: #38bdf8;
-            font-size: 1.5rem;
-        }
-
-        /* Custom Scrollbar */
-        .log-box::-webkit-scrollbar { width: 6px; }
-        .log-box::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.3); border-radius: 10px; }
+        .system-title { font-family: 'Orbitron', sans-serif; letter-spacing: 2px; color: #38bdf8; font-size: 1.5rem; }
     </style>
 </head>
 <body>
@@ -105,12 +56,12 @@
     <div class="header-section mb-4">
         <div class="container d-flex justify-content-between align-items-center">
             <div>
-                <h1 class="system-title fw-bold m-0 text-uppercase">Attend-X <span class="text-white">Scanner</span></h1>
-                <small class="text-muted" id="currentDate">Sistem Kehadiran Pintu Pagar</small>
+                <h1 class="system-title fw-bold m-0">ATTEND-X <span class="text-white">SCANNER</span></h1>
+                <small class="text-muted" id="currentDate">Sistem Kehadiran Digital</small>
             </div>
             <div class="text-end">
-                <h3 class="m-0 fw-bold" id="clock">00:00:00</h3>
-                <span class="badge bg-primary px-3 rounded-pill">SISTEM AKTIF</span>
+                <h3 class="m-0 fw-bold text-info" id="clock">00:00:00</h3>
+                <span class="badge bg-primary px-3 rounded-pill">AKTIF</span>
             </div>
         </div>
     </div>
@@ -118,21 +69,20 @@
     <div class="container-fluid px-lg-5">
         <div class="row g-4">
             <div class="col-md-6 text-center">
-                <div class="v-container mb-4">
-                    <video id="preview"></video>
-                    <div class="scan-anim"></div>
-                </div>
+                <div id="reader"></div>
                 
-                <button onclick="manualCheckIn()" class="btn btn-outline-info rounded-pill px-5 py-3 fw-bold">
-                    <i class="fas fa-keyboard me-2"></i>LUPA KAD? MASUK MANUAL
-                </button>
+                <div class="mt-4">
+                    <button onclick="manualCheckIn()" class="btn btn-outline-info rounded-pill px-5 py-3 fw-bold border-2">
+                        <i class="fas fa-keyboard me-2"></i>INPUT MANUAL
+                    </button>
+                </div>
             </div>
 
             <div class="col-md-6">
-                <h5 class="mb-3 text-info fw-bold">KEHADIRAN TERKINI</h5>
+                <h5 class="mb-3 text-info fw-bold"><i class="fas fa-history me-2"></i>LOG KEHADIRAN</h5>
                 <div id="log" class="log-box">
-                    <div class="text-center py-5 text-muted">
-                        <p>Menunggu imbasan QR...</p>
+                    <div id="placeholder" class="text-center py-5 text-muted">
+                        <p>Sila benarkan akses kamera untuk mula imbas.</p>
                     </div>
                 </div>
             </div>
@@ -140,16 +90,14 @@
     </div>
 
     <script>
-        // 1. Clock Logic
-        function updateTime() {
+        // 1. Clock
+        setInterval(() => {
             const now = new Date();
             document.getElementById('clock').innerText = now.toLocaleTimeString('ms-MY');
             document.getElementById('currentDate').innerText = now.toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-        }
-        setInterval(updateTime, 1000);
-        updateTime();
+        }, 1000);
 
-        // 2. Firebase Config
+        // 2. Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyA03bLm1Ztt6TzF-jzOa9CpjZn7mEYtIlQ",
             authDomain: "kehadiran-47efc.firebaseapp.com",
@@ -158,94 +106,66 @@
             storageBucket: "kehadiran-47efc.firebasestorage.app",
             appId: "1:523088126436:web:6fb51d9888bcd18f7267f1"
         };
-        
-        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // 3. Scanner Logic (Versi Fix)
-        let scanner = new Instascan.Scanner({ 
-            video: document.getElementById('preview'), 
-            mirror: false,
-            backgroundScan: false 
-        });
-        
-        scanner.addListener('scan', function (id) {
-            recordAttendance(id, "QR SCAN");
+        // 3. New Scanner Logic (HTML5-QRCode)
+        const html5QrCode = new Html5Qrcode("reader");
+        const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+        // Start Scanner
+        html5QrCode.start({ facingMode: "environment" }, qrConfig, (decodedText) => {
+            recordAttendance(decodedText, "QR SCAN");
+        }).catch(err => {
+            console.error(err);
+            // Jika gelap, mungkin sebab browser block kamera
+            Swal.fire('Kamera Disekat', 'Sila klik ikon Mangga (Lock) di URL bar dan pilih "Allow Camera", kemudian Refresh.', 'warning');
         });
 
-        Instascan.Camera.getCameras().then(function (cameras) {
-            if (cameras.length > 0) {
-                // Utamakan kamera belakang kalau ada
-                let backCam = cameras.find(cam => cam.name.toLowerCase().includes('back'));
-                scanner.start(backCam || cameras[0]);
-            } else {
-                Swal.fire('Ralat', 'Kamera tidak dikesan. Sila gunakan Live Server/HTTPS.', 'error');
-            }
-        }).catch(function (e) {
-            console.error(e);
-            Swal.fire('Ralat Kamera', 'Pastikan akses kamera dibenarkan (Allow) dan guna Live Server.', 'warning');
-        });
-
+        // 4. Record
         function recordAttendance(id, method) {
             db.ref('pelajar/' + id).once('value').then(snap => {
                 if(snap.exists()) {
                     const user = snap.val();
                     const now = new Date();
                     const today = now.toISOString().split('T')[0];
-                    const time = now.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                    
+                    const time = now.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' });
                     const status = (now.getHours() > 7 || (now.getHours() == 7 && now.getMinutes() > 30)) ? "LEWAT" : "HADIR";
 
                     db.ref(`kehadiran/${today}/${id}`).set({
-                        name: user.name, 
-                        class: user.class, 
-                        time: time, 
-                        status: status, 
-                        nota: method
+                        name: user.name, class: user.class, time: time, status: status, nota: method
                     }).then(() => {
-                        // Suara
                         const speech = new SpeechSynthesisUtterance(`${user.name}, selamat datang.`);
+                        speech.lang = 'ms-MY';
                         window.speechSynthesis.speak(speech);
 
-                        // Update Log
-                        const logArea = document.getElementById('log');
-                        if(logArea.innerText.includes('Menunggu')) logArea.innerHTML = '';
+                        if(document.getElementById('placeholder')) document.getElementById('placeholder').remove();
 
                         const html = `
                             <div class="attendance-card ${status == 'LEWAT' ? 'lewat' : ''} animate__animated animate__fadeInRight">
-                                <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex justify-content-between">
                                     <div>
-                                        <h6 class="fw-bold m-0 text-uppercase">${user.name}</h6>
+                                        <h6 class="fw-bold m-0">${user.name}</h6>
                                         <small class="text-muted">${user.class} • ${time}</small>
                                     </div>
-                                    <div class="text-end">
-                                        <span class="badge ${status == 'LEWAT' ? 'bg-danger' : 'bg-success'} rounded-pill">${status}</span>
-                                        <br><small style="font-size: 10px;" class="text-uppercase text-secondary">${method}</small>
-                                    </div>
+                                    <span class="badge ${status == 'LEWAT' ? 'bg-danger' : 'bg-success'} rounded-pill h-50">${status}</span>
                                 </div>
                             </div>`;
-                        logArea.innerHTML = html + logArea.innerHTML;
+                        document.getElementById('log').insertAdjacentHTML('afterbegin', html);
                     });
-                } else {
-                    Swal.fire({ title: 'ID Tidak Sah', text: 'Pelajar tidak ditemui.', icon: 'error', background: '#0f172a', color: '#fff' });
                 }
             });
         }
 
         function manualCheckIn() {
             Swal.fire({
-                title: 'Input Manual',
+                title: 'ID Murid',
                 input: 'text',
-                inputPlaceholder: 'Taip ID Murid...',
                 background: '#1e293b',
                 color: '#fff',
-                confirmButtonColor: '#6366f1',
                 showCancelButton: true
-            }).then(res => { 
-                if(res.value) recordAttendance(res.value, "MANUAL"); 
-            });
+            }).then(res => { if(res.value) recordAttendance(res.value, "MANUAL"); });
         }
     </script>
-    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
 </body>
 </html>
