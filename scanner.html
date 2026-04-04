@@ -9,11 +9,12 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .v-container { border: 5px solid #6366f1; border-radius: 30px; position: relative; overflow: hidden; max-width: 450px; margin: 0 auto; }
-        .scan-anim { width: 100%; height: 4px; background: #6366f1; position: absolute; animation: scan 2s infinite linear; box-shadow: 0 0 15px #6366f1; }
+        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; }
+        .v-container { border: 5px solid #6366f1; border-radius: 30px; position: relative; overflow: hidden; max-width: 450px; margin: 0 auto; background: #000; }
+        .scan-anim { width: 100%; height: 4px; background: #6366f1; position: absolute; animation: scan 2s infinite linear; box-shadow: 0 0 15px #6366f1; z-index: 10; }
         @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
-        .log-box { background: rgba(255,255,255,0.05); border-radius: 20px; height: 400px; overflow-y: auto; padding: 15px; }
+        .log-box { background: rgba(255,255,255,0.05); border-radius: 20px; height: 450px; overflow-y: auto; padding: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        video { object-fit: cover; }
     </style>
 </head>
 <body class="p-4">
@@ -39,23 +40,45 @@
     </div>
 
     <script>
-        firebase.initializeApp({
+        // 1. Firebase Config (Satu sahaja sudah cukup)
+        const firebaseConfig = {
+            apiKey: "AIzaSyA03bLm1Ztt6TzF-jzOa9CpjZn7mEYtIlQ",
+            authDomain: "kehadiran-47efc.firebaseapp.com",
+            projectId: "kehadiran-47efc",
             databaseURL: "https://kehadiran-47efc-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "kehadiran-47efc"
-        });
-         const firebaseConfig = {
-        apiKey: "AIzaSyA03bLm1Ztt6TzF-jzOa9CpjZn7mEYtIlQ",
-        authDomain: "kehadiran-47efc.firebaseapp.com",
-        projectId: "kehadiran-47efc",
-        databaseURL: "https://kehadiran-47efc-default-rtdb.asia-southeast1.firebasedatabase.app",
-        storageBucket: "kehadiran-47efc.firebasestorage.app",
-        appId: "1:523088126436:web:6fb51d9888bcd18f7267f1"
-    };
+            storageBucket: "kehadiran-47efc.firebasestorage.app",
+            appId: "1:523088126436:web:6fb51d9888bcd18f7267f1"
+        };
+        
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
 
-        let scanner = new Instascan.Scanner({ video: document.getElementById('preview'), mirror: false });
+        // 2. Scanner Logic
+        let scanner = new Instascan.Scanner({ 
+            video: document.getElementById('preview'), 
+            mirror: false,
+            backgroundScan: false 
+        });
         
         scanner.addListener('scan', function (id) {
             recordAttendance(id, "QR SCAN");
+        });
+
+        // 3. Ambil Kamera
+        Instascan.Camera.getCameras().then(function (cameras) {
+            if (cameras.length > 0) {
+                // Cuba cari kamera belakang dulu kalau ada, kalau tak guna kamera pertama
+                let backCam = cameras.find(cam => cam.name.toLowerCase().includes('back'));
+                scanner.start(backCam || cameras[0]);
+            } else {
+                Swal.fire('Ralat', 'Kamera tidak dikesan pada peranti ini.', 'error');
+            }
+        }).catch(function (e) {
+            console.error(e);
+            Swal.fire('Ralat Kamera', 'Sila pastikan anda benarkan (Allow) akses kamera dan menggunakan HTTPS.', 'warning');
         });
 
         function manualCheckIn() {
@@ -64,7 +87,9 @@
                 input: 'text',
                 showCancelButton: true,
                 confirmButtonText: 'Rekod'
-            }).then(res => { if(res.value) recordAttendance(res.value, "MANUAL (LUPA KAD)"); });
+            }).then(res => { 
+                if(res.value) recordAttendance(res.value, "MANUAL (LUPA KAD)"); 
+            });
         }
 
         function recordAttendance(id, method) {
@@ -73,28 +98,34 @@
                     const user = snap.val();
                     const now = new Date();
                     const today = now.toISOString().split('T')[0];
-                    const time = now.toLocaleTimeString('ms-MY');
+                    const time = now.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    
+                    // Logik Lewat (Selepas 7:30 Pagi)
                     const status = (now.getHours() > 7 || (now.getHours() == 7 && now.getMinutes() > 30)) ? "LEWAT" : "HADIR";
 
                     db.ref(`kehadiran/${today}/${id}`).set({
-                        name: user.name, class: user.class, time: time, status: status, nota: method
+                        name: user.name, 
+                        class: user.class, 
+                        time: time, 
+                        status: status, 
+                        nota: method
+                    }).then(() => {
+                        // Suara Sambutan
+                        const speech = new SpeechSynthesisUtterance(`${user.name}, selamat datang.`);
+                        window.speechSynthesis.speak(speech);
+
+                        const html = `
+                            <div class="p-3 mb-2 rounded bg-dark border-start border-4 ${status=='LEWAT'?'border-danger':'border-success'} animate__animated animate__fadeIn">
+                                <strong>${user.name}</strong> <span class="badge ${status=='LEWAT'?'bg-danger':'bg-success'} float-end">${status}</span>
+                                <br><small class="text-muted">${user.class} • ${time} (${method})</small>
+                            </div>`;
+                        document.getElementById('log').innerHTML = html + document.getElementById('log').innerHTML;
                     });
-
-                    // Suara Sambutan
-                    window.speechSynthesis.speak(new SpeechSynthesisUtterance(`${user.name}, selamat datang.`));
-
-                    const html = `<div class="p-3 mb-2 rounded bg-dark border-start border-4 ${status=='LEWAT'?'border-danger':'border-success'}">
-                        <strong>${user.name}</strong> <span class="badge ${status=='LEWAT'?'bg-danger':'bg-success'} float-end">${status}</span>
-                        <br><small class="text-muted">${user.class} • ${time} (${method})</small>
-                    </div>`;
-                    document.getElementById('log').innerHTML = html + document.getElementById('log').innerHTML;
                 } else {
-                    Swal.fire('Ralat', 'ID Tidak Dijumpai', 'error');
+                    Swal.fire('Ralat', 'ID Pelajar ' + id + ' tidak dijumpai dalam sistem.', 'error');
                 }
             });
         }
-
-        Instascan.Camera.getCameras().then(c => { if(c.length>0) scanner.start(c[0]); });
     </script>
 </body>
 </html>
