@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Pelajar | Attend-X</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { background: #f3f4f6; min-height: 100vh; display: flex; align-items: center; font-family: 'Poppins', sans-serif; }
+        .card { border: none; border-radius: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .btn-indigo { background: #4f46e5; color: white; border-radius: 12px; padding: 12px; transition: 0.3s; }
+        .btn-indigo:hover { background: #4338ca; transform: translateY(-2px); }
+        #qrcode { background: white; padding: 15px; border-radius: 15px; display: inline-block; border: 1px solid #eee; }
+    </style>
+</head>
+<body>
+<div class="container" style="max-width: 500px;">
+    <div class="card p-5">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold text-dark">Pendaftaran Murid</h2>
+            <p class="text-muted small">Lengkapkan maklumat untuk jana QR</p>
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold small">NAMA PENUH</label>
+            <input type="text" id="name" class="form-control" placeholder="Contoh: Muhammad Ali">
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold small">NO. ID / MATRIK</label>
+            <input type="text" id="studentID" class="form-control" placeholder="Contoh: 2026XX">
+        </div>
+        <div class="mb-4">
+            <label class="form-label fw-bold small">KELAS</label>
+                   <select id="studentClass" class="form-select">
+                        <option value="">-- Pilih Kelas --</option>
+                        <option value="1 IBNU SINA">1 IBNU SINA</option>
+                        <option value="1 KARISMA">1 KARISMA</option>
+                        <option value="1 SIMFONI">1 SIMFONI</option>
+</select>
+        </div>
+        <button onclick="register()" class="btn btn-indigo w-100 fw-bold shadow">DAFTAR & JANA QR</button>
+
+        <div id="qrArea" class="text-center mt-5" style="display:none;">
+            <div id="qrcode"></div>
+            <br>
+            <button onclick="downloadQR()" class="btn btn-outline-dark btn-sm mt-3 rounded-pill">
+                <i class="fas fa-download me-2"></i>Muat Turun QR
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyA03bLm1Ztt6TzF-jzOa9CpjZn7mEYtIlQ",
+        authDomain: "kehadiran-47efc.firebaseapp.com",
+        projectId: "kehadiran-47efc",
+        databaseURL: "https://kehadiran-47efc-default-rtdb.asia-southeast1.firebasedatabase.app",
+        storageBucket: "kehadiran-47efc.firebasestorage.app",
+        appId: "1:523088126436:web:6fb51d9888bcd18f7267f1"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function register() {
+        const id = document.getElementById('studentID').value;
+        const name = document.getElementById('name').value;
+        const sClass = document.getElementById('studentClass').value;
+        if(!id || !name) return Swal.fire('Ralat', 'Sila isi semua maklumat', 'error');
+
+        db.ref('pelajar/' + id).set({ name: name, class: sClass }).then(() => {
+            Swal.fire('Berjaya', 'Pelajar didaftarkan', 'success');
+            document.getElementById('qrArea').style.display = 'block';
+            document.getElementById("qrcode").innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), { text: id, width: 150, height: 150 });
+        });
+    }
+
+    function downloadQR() {
+        const canvas = document.querySelector('#qrcode canvas');
+        const link = document.createElement('a');
+        link.download = `QR_${document.getElementById('studentID').value}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+    }
+</script>
+</body>
+</html>
