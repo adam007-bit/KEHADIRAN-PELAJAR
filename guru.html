@@ -2,102 +2,115 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <title>Portal Guru & Analitik | Attend-X</title>
+    <title>Portal Guru & Analitik Pro | Attend-X</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
-        body { background: #f1f5f9; font-family: 'Inter', sans-serif; }
-        .login-box { max-width: 400px; margin: 80px auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
-        .nav-tabs .nav-link { color: #64748b; font-weight: 600; border: none; }
-        .nav-tabs .nav-link.active { color: #4f46e5; border-bottom: 3px solid #4f46e5; background: none; }
-        .stat-card { border-radius: 15px; border: none; transition: 0.3s; }
-        .stat-card:hover { transform: translateY(-5px); }
+        body { background: #0f172a; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .login-box { max-width: 400px; margin: 100px auto; background: #1e293b; padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        .card { background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; color: white; }
+        .nav-tabs .nav-link { color: #94a3b8; font-weight: 600; border: none; }
+        .nav-tabs .nav-link.active { color: #6366f1; border-bottom: 3px solid #6366f1; background: none; }
+        .stat-value { font-size: 2.5rem; font-weight: 800; }
+        .table { color: #cbd5e1; }
+        .table-light { background: #334155; color: white; border: none; }
+        canvas { max-height: 250px; }
+        
         @media print { 
-            .no-print, .nav-tabs, .btn, .login-box { display: none !important; }
-            .print-only { display: block !important; }
-            body { background: white; }
-            .card { box-shadow: none; border: 1px solid #ddd; }
+            .no-print { display: none !important; }
+            body { background: white; color: black; }
+            .card { border: 1px solid #000; color: black; }
         }
     </style>
 </head>
 <body>
 
-    <div id="authArea" class="login-box">
-        <i class="fas fa-university fa-3x text-primary mb-3"></i>
-        <h4 class="fw-bold">PORTAL GURU & ANALITIK</h4>
-        <input type="password" id="passInput" class="form-control text-center mb-3" maxlength="4" placeholder="PIN 4-Digit">
-        <button onclick="checkPass()" class="btn btn-primary w-100 fw-bold">MASUK SISTEM</button>
+    <div id="authArea" class="login-box animate__animated animate__fadeIn">
+        <div class="mb-4">
+            <i class="fas fa-chart-line fa-3x text-info"></i>
+        </div>
+        <h4 class="fw-bold mb-3">PORTAL ANALITIK GURU</h4>
+        <p class="text-muted small">Sila masukkan PIN keselamatan untuk akses data kehadiran real-time.</p>
+        <input type="password" id="passInput" class="form-control form-control-lg text-center mb-3 shadow-none" style="background: #0f172a; color: white; border: 1px solid #334155;" maxlength="4" placeholder="••••">
+        <button onclick="checkPass()" class="btn btn-info w-100 fw-bold py-3 rounded-pill">LOG MASUK</button>
     </div>
 
-    <div id="dashArea" class="container-fluid py-4" style="display:none;">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center mb-4 no-print">
-                <h2 class="fw-bold"><i class="fas fa-chart-pie me-2 text-primary"></i>Attend-X Analytics</h2>
-                <button onclick="window.print()" class="btn btn-dark shadow-sm"><i class="fas fa-print me-2"></i>Cetak Laporan</button>
+    <div id="dashArea" class="container py-4" style="display:none;">
+        <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+            <div>
+                <h2 class="fw-bold m-0 text-info">ATTEND-X <span class="text-white">INSIGHTS</span></h2>
+                <p class="text-muted mb-0">Analisis Kehadiran Murid Harian</p>
             </div>
+            <button onclick="window.print()" class="btn btn-outline-light rounded-pill"><i class="fas fa-print me-2"></i>Cetak Laporan</button>
+        </div>
 
-            <ul class="nav nav-tabs mb-4 no-print" id="myTab" role="tablist">
-                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#analitik">Ringkasan & Peratus</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kehadiran">Kehadiran Kelas</button></li>
-            </ul>
+        <ul class="nav nav-tabs mb-4 no-print border-0" role="tablist">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#analitik">Ringkasan Eksekutif</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kehadiran">Semakan Per Kelas</button></li>
+        </ul>
 
-            <div class="tab-content">
-                <div class="tab-pane fade show active" id="analitik">
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-4">
-                            <div class="card stat-card bg-primary text-white p-4">
-                                <small>OVERALL KEHADIRAN</small>
-                                <h1 id="overall-per" class="fw-bold">0%</h1>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card stat-card bg-success text-white p-4">
-                                <small>MURID HADIR</small>
-                                <h1 id="total-present" class="fw-bold">0</h1>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card stat-card bg-danger text-white p-4">
-                                <small>MURID PONTENG</small>
-                                <h1 id="total-absent" class="fw-bold">0</h1>
-                            </div>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="analitik">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="card p-3 border-start border-4 border-success">
+                            <small class="text-uppercase fw-bold text-success">Hadir Tepat</small>
+                            <div class="stat-value text-white" id="per-hadir">0%</div>
                         </div>
                     </div>
-
-                    <div class="card p-4 card-table">
-                        <h5 class="fw-bold mb-3">Analisis Mengikut Tingkatan & Kelas</h5>
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle">
-                                <thead class="table-light">
-                                    <tr><th>Tingkatan / Kelas</th><th>Enrolmen</th><th>Hadir</th><th>% Kehadiran</th></tr>
-                                </thead>
-                                <tbody id="statsBody"></tbody>
-                            </table>
+                    <div class="col-md-3">
+                        <div class="card p-3 border-start border-4 border-warning">
+                            <small class="text-uppercase fw-bold text-warning">Hadir Lewat</small>
+                            <div class="stat-value text-white" id="per-lewat">0%</div>
                         </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card p-3 border-start border-4 border-danger">
+                            <small class="text-uppercase fw-bold text-danger">Tidak Hadir</small>
+                            <div class="stat-value text-white" id="per-ponteng">0%</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center d-flex align-items-center justify-content-center">
+                        <canvas id="miniChart"></canvas>
                     </div>
                 </div>
 
-                <div class="tab-pane fade" id="kehadiran">
-                    <div class="row mb-3 no-print">
-                        <div class="col-md-4">
-                            <select id="classSelector" class="form-select shadow-sm" onchange="loadClassTable()">
-                                <option value="">-- Pilih Kelas --</option>
-                                <option value="1 IBNU SINA">1 IBNU SINA</option>
-                                <option value="1 KARISMA">1 KARISMA</option>
-                                <option value="1 SIMFONI">1 SIMFONI</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="card p-4 card-table">
-                        <table class="table table-hover">
-                            <thead><tr><th>Nama</th><th>Status</th><th>Masa</th><th>Catatan</th></tr></thead>
-                            <tbody id="classTableBody"></tbody>
+                <div class="card p-4">
+                    <h5 class="fw-bold mb-4">Prestasi Kehadiran Mengikut Kelas</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle border-0">
+                            <thead>
+                                <tr class="text-muted small text-uppercase">
+                                    <th>Kelas</th><th>Enrolmen</th><th>Hadir</th><th>Lewat</th><th>% Kehadiran</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statsBody"></tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="kehadiran">
+                <div class="row mb-3 no-print">
+                    <div class="col-md-4">
+                        <select id="classSelector" class="form-select border-0 shadow-sm" style="background: #1e293b; color: white;" onchange="loadClassTable()">
+                            <option value="">-- Pilih Kelas --</option>
+                            <option value="1 IBNU SINA">1 IBNU SINA</option>
+                            <option value="1 KARISMA">1 KARISMA</option>
+                            <option value="1 SIMFONI">1 SIMFONI</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card p-4">
+                    <table class="table">
+                        <thead><tr class="text-muted"><th>Nama Murid</th><th>Status</th><th>Masa Masuk</th><th>Catatan</th></tr></thead>
+                        <tbody id="classTableBody"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -107,13 +120,14 @@
     firebase.initializeApp({ databaseURL: "https://kehadiran-47efc-default-rtdb.asia-southeast1.firebasedatabase.app" });
     const db = firebase.database();
     const MASTER_PASSCODE = "1234";
+    let myChart = null;
 
     function checkPass() {
         if(document.getElementById('passInput').value === MASTER_PASSCODE) {
             document.getElementById('authArea').style.display = 'none';
             document.getElementById('dashArea').style.display = 'block';
             runAnalytics();
-        } else { Swal.fire('Salah', 'PIN Tidak Sah', 'error'); }
+        } else { Swal.fire('Akses Ditolak', 'PIN PIN salah!', 'error'); }
     }
 
     async function runAnalytics() {
@@ -124,42 +138,81 @@
         const allStudents = studentsSnap.val() || {};
         const attendance = attendanceSnap.val() || {};
 
-        let stats = {}; // { "1 IBNU SINA": {total: 0, present: 0} }
+        let stats = {}; 
         let grandTotal = 0;
-        let grandPresent = 0;
+        let grandOnTime = 0;
+        let grandLate = 0;
 
         Object.keys(allStudents).forEach(id => {
             const cls = allStudents[id].class;
-            if(!stats[cls]) stats[cls] = { total: 0, present: 0 };
+            if(!stats[cls]) stats[cls] = { total: 0, onTime: 0, late: 0 };
             
             stats[cls].total++;
             grandTotal++;
 
-            if(attendance[id] && (attendance[id].status === "HADIR" || attendance[id].status === "LEWAT")) {
-                stats[cls].present++;
-                grandPresent++;
+            if(attendance[id]) {
+                if(attendance[id].status === "HADIR") {
+                    stats[cls].onTime++;
+                    grandOnTime++;
+                } else if(attendance[id].status === "LEWAT") {
+                    stats[cls].late++;
+                    grandLate++;
+                }
             }
         });
 
-        // Papar Stats Table
+        const grandAbsent = grandTotal - (grandOnTime + grandLate);
+
+        // Update Big Percentages
+        document.getElementById('per-hadir').innerText = ((grandOnTime/grandTotal)*100).toFixed(0) + "%";
+        document.getElementById('per-lewat').innerText = ((grandLate/grandTotal)*100).toFixed(0) + "%";
+        document.getElementById('per-ponteng').innerText = ((grandAbsent/grandTotal)*100).toFixed(0) + "%";
+
+        // Draw Chart
+        drawChart(grandOnTime, grandLate, grandAbsent);
+
+        // Render Table Rows
         let rows = "";
         for(let cls in stats) {
-            let per = ((stats[cls].present / stats[cls].total) * 100).toFixed(1);
+            let presentCount = stats[cls].onTime + stats[cls].late;
+            let per = ((presentCount / stats[cls].total) * 100).toFixed(1);
             rows += `<tr>
                 <td class="fw-bold">${cls}</td>
                 <td>${stats[cls].total}</td>
-                <td>${stats[cls].present}</td>
+                <td class="text-success">${stats[cls].onTime}</td>
+                <td class="text-warning">${stats[cls].late}</td>
                 <td>
-                    <div class="progress" style="height: 20px;">
-                        <div class="progress-bar" style="width: ${per}%">${per}%</div>
+                    <div class="d-flex align-items-center">
+                        <div class="progress flex-grow-1" style="height: 8px; background: #334155;">
+                            <div class="progress-bar bg-info" style="width: ${per}%"></div>
+                        </div>
+                        <span class="ms-2 small">${per}%</span>
                     </div>
                 </td>
             </tr>`;
         }
         document.getElementById('statsBody').innerHTML = rows;
-        document.getElementById('overall-per').innerText = ((grandPresent/grandTotal)*100).toFixed(1) + "%";
-        document.getElementById('total-present').innerText = grandPresent;
-        document.getElementById('total-absent').innerText = grandTotal - grandPresent;
+    }
+
+    function drawChart(h, l, p) {
+        const ctx = document.getElementById('miniChart').getContext('2d');
+        if(myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Tepat', 'Lewat', 'Ponteng'],
+                datasets: [{
+                    data: [h, l, p],
+                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                cutout: '70%'
+            }
+        });
     }
 
     async function loadClassTable() {
@@ -175,11 +228,21 @@
         Object.keys(students).forEach(id => {
             const s = students[id];
             const rec = attend[id];
+            let statusBadge = "";
+            
+            if(!rec) {
+                statusBadge = '<span class="badge bg-danger">TIADA REKOD</span>';
+            } else if(rec.status === "LEWAT") {
+                statusBadge = '<span class="badge bg-warning text-dark">HADIR LEWAT</span>';
+            } else {
+                statusBadge = '<span class="badge bg-success">HADIR TEPAT</span>';
+            }
+
             html += `<tr>
                 <td>${s.name}</td>
-                <td><span class="badge ${!rec?'bg-danger':'bg-success'}">${!rec?'TAK HADIR':'HADIR'}</span></td>
+                <td>${statusBadge}</td>
                 <td>${rec ? rec.time : '-'}</td>
-                <td>${rec?.sebab || '-'}</td>
+                <td class="small text-muted">${rec?.nota || '-'}</td>
             </tr>`;
         });
         document.getElementById('classTableBody').innerHTML = html;
