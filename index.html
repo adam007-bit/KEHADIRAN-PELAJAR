@@ -2,493 +2,434 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Attend-X | Sistem Pendaftaran Pelajar & Kad Pintar QR</title>
-    <!-- Bootstrap 5 + Icons + Fonts -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attend-X Pro | Sistem Kehadiran Sekolah</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <!-- Firebase SDK (v8) + Realtime DB -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <!-- SweetAlert & QRCode library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
     <style>
-        * {
-            font-family: 'Inter', sans-serif;
-        }
+        * { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body {
-            background: linear-gradient(135deg, #0b1120 0%, #111827 100%);
+            background: linear-gradient(135deg, #0f172a, #1e293b);
             min-height: 100vh;
-            padding: 2rem 1rem;
+            padding: 20px;
         }
-        .glass-card {
-            background: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(2px);
-            border-radius: 2rem;
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.5);
-            transition: all 0.2s ease;
-        }
-        .reg-card {
-            max-width: 550px;
+        .container-custom {
+            max-width: 500px;
             margin: 0 auto;
-            padding: 2rem 2rem 2rem 2rem;
         }
-        .form-label {
-            font-weight: 600;
-            font-size: 0.8rem;
-            letter-spacing: 0.5px;
-            color: #a5b4fc;
-            margin-bottom: 0.4rem;
+        .card-glass {
+            background: rgba(255,255,255,0.95);
+            border-radius: 28px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
         }
-        .form-control, .form-select {
-            background-color: #0f172a;
-            border: 1.5px solid #334155;
-            color: #f1f5f9;
-            border-radius: 1rem;
-            padding: 0.75rem 1rem;
-            transition: all 0.2s;
+        .btn-primary-custom {
+            background: linear-gradient(95deg, #4f46e5, #7c3aed);
+            border: none;
+            border-radius: 40px;
+            padding: 14px;
+            font-weight: bold;
+            color: white;
+            width: 100%;
         }
-        .form-control:focus, .form-select:focus {
-            background-color: #0f172a;
-            border-color: #818cf8;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+        .btn-outline-custom {
+            border: 2px solid #4f46e5;
+            border-radius: 40px;
+            padding: 12px;
+            font-weight: bold;
+            background: transparent;
+            color: #4f46e5;
+            width: 100%;
+        }
+        .qr-box {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 15px 0;
+        }
+        .nav-tab {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .tab-btn.active {
+            background: #4f46e5;
             color: white;
         }
-        .btn-glow {
-            background: linear-gradient(95deg, #4f46e5 0%, #7c3aed 100%);
-            border: none;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            box-shadow: 0 8px 20px -8px #4f46e5;
-            transition: transform 0.1s ease;
-        }
-        .btn-glow:hover {
-            transform: scale(1.01);
-            background: linear-gradient(95deg, #6366f1, #8b5cf6);
-            box-shadow: 0 10px 25px -6px #6366f1;
-        }
-        .qr-card {
-            background: #ffffff;
-            padding: 1rem;
-            border-radius: 1.5rem;
-            display: inline-block;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
-            margin: 0.5rem 0;
-        }
-        .student-badge {
-            background: #0f172a;
-            border-radius: 1.5rem;
-            padding: 0.6rem 1.2rem;
-            border-left: 5px solid #fbbf24;
-        }
-        hr {
-            opacity: 0.3;
-        }
-        .print-hide {
-            transition: all 0.2s;
-        }
-        @media print {
-            body {
-                background: white;
-                padding: 0;
-                margin: 0;
-            }
-            .no-print, .btn-glow, .reg-card .mb-3, .reg-card .mb-4, .reg-card h3, .reg-card p, button, .no-print-all {
-                display: none !important;
-            }
-            .glass-card {
-                background: white;
-                box-shadow: none;
-                border: none;
-                padding: 0;
-                margin: 0;
-            }
-            .reg-card {
-                padding: 0.5rem;
-                max-width: 100%;
-            }
-            #displayArea {
-                display: block !important;
-                text-align: center;
-                margin-top: 0;
-            }
-            .qr-card {
-                border: 2px solid #111;
-                box-shadow: none;
-            }
-            #displayName, #displayID, #msgStatus {
-                color: black !important;
-            }
-            .student-badge {
-                background: #f3f4f6;
-                border-left-color: #2563eb;
-                color: black;
-            }
-        }
-        .id-copy {
-            cursor: pointer;
-            transition: 0.1s;
-        }
-        .id-copy:hover {
-            color: #facc15;
-            text-decoration: underline;
-        }
-        footer {
-            font-size: 0.75rem;
-            text-align: center;
-            margin-top: 2rem;
+        .tab-btn:not(.active) {
+            background: #e2e8f0;
             color: #475569;
         }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .table-custom {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-custom th, .table-custom td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .badge-hadir { background: #10b981; color: white; padding: 4px 12px; border-radius: 30px; font-size: 12px; }
+        .badge-lewat { background: #f59e0b; color: white; padding: 4px 12px; border-radius: 30px; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="glass-card reg-card">
-        <div class="text-center mb-3">
-            <i class="fas fa-qrcode fs-1 text-info bg-dark p-2 rounded-circle" style="background: #0f172a;"></i>
-            <h2 class="fw-bold mt-2 bg-gradient-to-r text-transparent" style="background: linear-gradient(120deg, #c084fc, #60a5fa); -webkit-background-clip: text; background-clip: text; color: transparent;">Attend-X</h2>
-            <p class="text-secondary-emphasis text-muted small">Sistem Pendaftaran Pelajar Pintar | Jana Kad ID QR</p>
-        </div>
-
-        <!-- maklumat pelajar -->
-        <div class="mb-3">
-            <div class="form-label"><i class="fas fa-id-card me-1"></i> ID PELAJAR (Kad Pengenalan / Nombor Siri)</div>
-            <input type="text" id="stuID" class="form-control form-control-lg" placeholder="cth: 050101020304 / A12345" autocomplete="off">
-            <div class="form-text text-muted small">ID unik untuk kehadiran & kad digital. Gunakan nombor kad matrik / KP.</div>
-        </div>
-
-        <div class="mb-3">
-            <div class="form-label"><i class="fas fa-user-graduate me-1"></i> NAMA PENUH</div>
-            <input type="text" id="stuName" class="form-control" placeholder="cth: NUR AISYAH BINTI ABDULLAH">
-        </div>
-
-        <div class="mb-4">
-            <div class="form-label"><i class="fas fa-chalkboard-user me-1"></i> KELAS / TINGKATAN</div>
-            <select id="stuClass" class="form-select">
-                <option value="1 IBNU SINA">📘 1 IBNU SINA</option>
-                <option value="1 KARISMA">⭐ 1 KARISMA</option>
-                <option value="1 SIMFONI">🎵 1 SIMFONI</option>
-                <option value="2 AL-FARABI">🧪 2 AL-FARABI</option>
-                <option value="2 AL-BIRUNI">🔭 2 AL-BIRUNI</option>
-                <option value="3 IMAM AL-GHAZALI">📖 3 IMAM AL-GHAZALI</option>
+<div class="container-custom">
+    <!-- Header -->
+    <div class="text-center mb-4">
+        <h1 class="text-white fw-bold">🎓 ATTEND-X PRO</h1>
+        <p class="text-white-50">Sistem Kehadiran Pintar SMK Putra</p>
+    </div>
+    
+    <!-- Tab Navigation -->
+    <div class="nav-tab">
+        <button class="tab-btn active" onclick="openTab('daftar')">📝 DAFTAR PELAJAR</button>
+        <button class="tab-btn" onclick="openTab('laporan')">📊 LAPORAN GURU</button>
+    </div>
+    
+    <!-- TAB 1: DAFTAR PELAJAR (Pelajar guna ni) -->
+    <div id="daftarTab" class="tab-content active">
+        <div class="card-glass">
+            <h3 class="text-center mb-3"><i class="fas fa-user-plus text-primary"></i> Daftar Kad QR</h3>
+            <p class="text-center text-muted small">Isi maklumat untuk dapatkan kad QR pelajar</p>
+            
+            <label class="form-label">ID Pelajar (No KP / Nombor Siri)</label>
+            <input type="text" id="studentID" class="form-control mb-3" placeholder="cth: 050101020304">
+            
+            <label class="form-label">Nama Penuh</label>
+            <input type="text" id="studentName" class="form-control mb-3" placeholder="NUR AISYAH BINTI ABDULLAH">
+            
+            <label class="form-label">Kelas / Tingkatan</label>
+            <select id="studentClass" class="form-select mb-3">
+                <option value="1 IBNU SINA">1 IBNU SINA</option>
+                <option value="1 KARISMA">1 KARISMA</option>
+                <option value="1 SIMFONI">1 SIMFONI</option>
+                <option value="2 AL-FARABI">2 AL-FARABI</option>
+                <option value="2 AL-BIRUNI">2 AL-BIRUNI</option>
+                <option value="3 IMAM AL-GHAZALI">3 IMAM AL-GHAZALI</option>
             </select>
-        </div>
-
-        <button onclick="checkAndRegister()" class="btn btn-glow w-100 py-3 rounded-pill fw-bold text-white no-print">
-            <i class="fas fa-fingerprint me-2"></i> DAFTAR & JANA KAD QR
-        </button>
-
-        <!-- Kawasan Paparan Kad Digital -->
-        <div id="displayArea" class="mt-4 text-center" style="display: none;">
-            <hr class="border-secondary mt-2 mb-3">
-            <div class="student-badge d-inline-flex align-items-center gap-2 px-3 py-2 mb-2">
-                <i class="fas fa-microchip text-warning"></i>
-                <span id="msgStatus" class="fw-semibold text-warning" style="font-size: 0.9rem;">KAD DIGITAL AKTIF</span>
-            </div>
             
-            <div id="qrContainer" class="d-flex justify-content-center my-3">
-                <div id="qr-result" class="qr-card"></div>
-            </div>
+            <button onclick="registerStudent()" class="btn-primary-custom">
+                <i class="fas fa-qrcode me-2"></i> DAFTAR & JANA KAD QR
+            </button>
             
-            <div class="mt-2">
-                <h4 id="displayName" class="fw-bold mb-1" style="color: #f0f9ff;">-</h4>
-                <p class="mb-1" id="displayID" style="color: #a5f3fc; font-size: 0.95rem;">-</p>
-                <p class="small text-secondary" id="displayClassInfo"></p>
-                <div class="d-flex justify-content-center gap-3 mt-3 no-print">
-                    <button onclick="copyStudentID()" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
-                        <i class="far fa-copy me-1"></i> Salin ID
-                    </button>
-                    <button onclick="window.print()" class="btn btn-sm btn-outline-light rounded-pill px-3">
-                        <i class="fas fa-print me-1"></i> Cetak Kad
-                    </button>
+            <!-- Area papar QR -->
+            <div id="qrArea" class="text-center mt-4" style="display: none;">
+                <hr>
+                <div class="qr-box">
+                    <div id="qrcode"></div>
                 </div>
-                <div class="mt-3 small text-muted">
-                    <i class="fas fa-qrcode me-1"></i> Imbas QR untuk kehadiran pantas
-                </div>
+                <h5 id="displayName" class="mt-2"></h5>
+                <p id="displayID" class="text-muted"></p>
+                <button onclick="window.print()" class="btn-outline-custom mt-2">
+                    <i class="fas fa-print me-2"></i> Cetak Kad
+                </button>
+                <p class="text-success small mt-2">
+                    <i class="fas fa-check-circle"></i> Simpan kad ini. Scan depan pagar sekolah untuk kehadiran!
+                </p>
             </div>
         </div>
-        <footer class="mt-4 no-print">
-            <i class="fas fa-shield-alt"></i> Data disimpan selamat di Firebase • Kad pintar Attend-X
-        </footer>
+        
+        <!-- Info untuk pelajar -->
+        <div class="card-glass mt-3">
+            <div class="text-center">
+                <i class="fas fa-info-circle text-info fa-2x mb-2"></i>
+                <h5>Cara Guna Kad QR</h5>
+                <p class="small text-muted">1. Daftar dan dapatkan kad QR di atas<br>
+                2. Simpan / cetak kad tersebut<br>
+                3. Scan kad di depan pagar sekolah setiap kali hadir</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- TAB 2: LAPORAN GURU -->
+    <div id="laporanTab" class="tab-content">
+        <div class="card-glass">
+            <h3 class="text-center mb-3"><i class="fas fa-chart-line text-success"></i> Laporan Kehadiran</h3>
+            
+            <!-- Filter -->
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <select id="filterClass" class="form-select">
+                        <option value="ALL">📚 SEMUA KELAS</option>
+                        <option value="1 IBNU SINA">1 IBNU SINA</option>
+                        <option value="1 KARISMA">1 KARISMA</option>
+                        <option value="1 SIMFONI">1 SIMFONI</option>
+                        <option value="2 AL-FARABI">2 AL-FARABI</option>
+                        <option value="2 AL-BIRUNI">2 AL-BIRUNI</option>
+                        <option value="3 IMAM AL-GHAZALI">3 IMAM AL-GHAZALI</option>
+                    </select>
+                </div>
+                <div class="col-6">
+                    <input type="date" id="reportDate" class="form-control">
+                </div>
+            </div>
+            
+            <button onclick="loadReport()" class="btn-primary-custom mb-3">
+                <i class="fas fa-search me-2"></i> JANA LAPORAN
+            </button>
+            
+            <!-- Ringkasan Stat -->
+            <div class="row text-center mb-3">
+                <div class="col-4">
+                    <div class="p-2 bg-success bg-opacity-10 rounded">
+                        <small>✅ Hadir</small>
+                        <h4 class="text-success" id="totalHadir">0</h4>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-2 bg-warning bg-opacity-10 rounded">
+                        <small>⚠️ Lewat</small>
+                        <h4 class="text-warning" id="totalLewat">0</h4>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-2 bg-danger bg-opacity-10 rounded">
+                        <small>❌ Tiada</small>
+                        <h4 class="text-danger" id="totalTiada">0</h4>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Jadual Laporan -->
+            <div style="max-height: 400px; overflow-y: auto;">
+                <table class="table-custom">
+                    <thead>
+                        <tr><th>Nama Pelajar</th><th>Kelas</th><th>Status</th><th>Masa</th></tr>
+                    </thead>
+                    <tbody id="reportTable">
+                        <tr><td colspan="4" class="text-center text-muted">Pilih tarikh & klik JANA LAPORAN</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <button onclick="exportToPDF()" class="btn-outline-custom mt-3">
+                <i class="fas fa-file-pdf me-2"></i> Export ke PDF
+            </button>
+        </div>
     </div>
 </div>
 
 <script>
-    // ================= KONFIGURASI FIREBASE (sama seperti keperluan) =================
+    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyA03bLm1Ztt6TzF-jzOa9CpjZn7mEYtIlQ",
         databaseURL: "https://kehadiran-47efc-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "kehadiran-47efc",
     };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
     
-    // Initialize Firebase (cek jika sudah init untuk elak ralat double init)
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    } else {
-        firebase.app(); // use existing app
-    }
-    const database = firebase.database();
-
-    // Helper untuk generate QR dengan destruc sebelumnya
-    let currentQR = null;   // untuk rujukan optional
-
-    // Fungsi bersihkan dan hasilkan QR baru
-    function generateQRCode(elementId, textValue) {
-        const container = document.getElementById(elementId);
-        if (!container) return;
-        // kosongkan container
-        container.innerHTML = "";
-        // gunakan QRCode library untuk jana
-        try {
-            new QRCode(container, {
-                text: textValue,
-                width: 160,
-                height: 160,
-                colorDark: "#0f172a",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M
-            });
-        } catch (err) {
-            console.warn("QR error", err);
-            container.innerHTML = `<div class="alert alert-danger p-2 small">Gagal jana QR</div>`;
-        }
-    }
-
-    // Papar kad pelajar (nama, id, kelas, QR)
-    function displayStudentCard(studentName, studentID, studentClass = "") {
-        const displayArea = document.getElementById('displayArea');
-        const displayNameSpan = document.getElementById('displayName');
-        const displayIDSpan = document.getElementById('displayID');
-        const displayClassSpan = document.getElementById('displayClassInfo');
-        const msgStatusSpan = document.getElementById('msgStatus');
+    // Set tarikh hari ini
+    document.getElementById('reportDate').valueAsDate = new Date();
+    
+    // Tab function
+    function openTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         
-        displayNameSpan.innerText = studentName.toUpperCase() || "PELAJAR";
-        displayIDSpan.innerHTML = `<i class="fas fa-id-badge me-1"></i> ID: ${studentID}`;
-        if (studentClass) {
-            displayClassSpan.innerHTML = `<i class="fas fa-school me-1"></i> ${studentClass}`;
-        } else {
-            displayClassSpan.innerHTML = "";
-        }
-        
-        // Jana QR dengan teks = studentID (gunakan untuk kehadiran)
-        generateQRCode('qr-result', studentID);
-        
-        // Tampilkan kawasan kad
-        displayArea.style.display = 'block';
-        
-        // optional simpan data untuk copy
-        window.currentStudentID = studentID;
+        document.getElementById(tab + 'Tab').classList.add('active');
+        event.target.classList.add('active');
     }
     
-    // Fungsi copy ID pelajar
-    window.copyStudentID = function() {
-        if (window.currentStudentID) {
-            navigator.clipboard.writeText(window.currentStudentID).then(() => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Disalin!',
-                    text: `ID Pelajar ${window.currentStudentID} disalin ke papan keratan.`,
-                    timer: 1500,
-                    showConfirmButton: false,
-                    background: '#1e293b',
-                    color: '#fff'
-                });
-            }).catch(() => {
-                Swal.fire('Gagal', 'Sila salin manual', 'error');
-            });
-        } else {
-            Swal.fire('Tiada ID', 'Sila daftar pelajar terlebih dahulu', 'info');
-        }
-    };
-    
-    // Fungsi utama: semak & daftar (dengan validasi)
-    async function checkAndRegister() {
-        // dapatkan nilai input
-        let studentId = document.getElementById('stuID').value.trim();
-        let studentName = document.getElementById('stuName').value.trim();
-        let studentClass = document.getElementById('stuClass').value;
+    // DAFTAR PELAJAR
+    async function registerStudent() {
+        const id = document.getElementById('studentID').value.trim();
+        const name = document.getElementById('studentName').value.trim();
+        const cls = document.getElementById('studentClass').value;
         
-        // Validasi asas
-        if (!studentId) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Ralat Input',
-                text: 'Sila masukkan ID Pelajar (nombor kad pengenalan / siri).',
-                background: '#1e293b',
-                color: '#fff'
-            });
-            return;
-        }
-        if (!studentName) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Nama diperlukan',
-                text: 'Sila masukkan nama penuh pelajar.',
-                background: '#1e293b',
-                color: '#fff'
-            });
+        if (!id || !name) {
+            Swal.fire('Error', 'Sila isi ID dan Nama lengkap', 'error');
             return;
         }
         
-        // Normalization: pastikan ID unik (tukar kepada huruf besar? biarkan asal tapi case-sensitive? lebih baik simpan asal)
-        // FireBase ref path: 'pelajar/' + studentId (ID boleh mengandungi huruf, nombor, tanda hubung)
-        const sanitizedId = studentId.trim();
-        const studentRef = database.ref('pelajar/' + sanitizedId);
+        // Check jika sudah wujud
+        const snap = await db.ref('pelajar/' + id).once('value');
         
-        // Tunjukkan loading indicator (opsional tapi elok)
-        Swal.fire({
-            title: 'Sedang memproses...',
-            text: 'Menyemak pangkalan data & pendaftaran',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
+        if (snap.exists()) {
+            Swal.fire('Sudah Berdaftar', `Pelajar ${snap.val().name} sudah wujud`, 'info');
+            showQR(name.toUpperCase(), id);
+        } else {
+            await db.ref('pelajar/' + id).set({
+                name: name.toUpperCase(),
+                class: cls,
+                registeredAt: Date.now()
+            });
+            Swal.fire('Berjaya!', 'Kad QR telah dijana', 'success');
+            showQR(name.toUpperCase(), id);
+        }
+    }
+    
+    function showQR(name, id) {
+        document.getElementById('qrArea').style.display = 'block';
+        document.getElementById('displayName').innerText = name;
+        document.getElementById('displayID').innerHTML = `<i class="fas fa-id-card"></i> ID: ${id}`;
+        document.getElementById('qrcode').innerHTML = '';
+        new QRCode(document.getElementById('qrcode'), {
+            text: id,
+            width: 150,
+            height: 150
         });
+    }
+    
+    // LAPORAN GURU
+    async function loadReport() {
+        const selectedClass = document.getElementById('filterClass').value;
+        const selectedDate = document.getElementById('reportDate').value;
+        
+        if (!selectedDate) {
+            Swal.fire('Error', 'Pilih tarikh laporan', 'error');
+            return;
+        }
+        
+        Swal.fire({ title: 'Memuatkan...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
         
         try {
-            const snapshot = await studentRef.once('value');
+            // Dapatkan semua pelajar
+            const studentsSnap = await db.ref('pelajar').once('value');
+            let students = [];
+            for (let [id, data] of Object.entries(studentsSnap.val() || {})) {
+                students.push({ id, name: data.name, class: data.class });
+            }
+            
+            // Filter mengikut kelas
+            if (selectedClass !== 'ALL') {
+                students = students.filter(s => s.class === selectedClass);
+            }
+            
+            // Dapatkan data kehadiran untuk tarikh tersebut
+            const attendanceSnap = await db.ref(`kehadiran/${selectedDate}`).once('value');
+            const attendance = attendanceSnap.val() || {};
+            
+            // Kira stat
+            let hadir = 0, lewat = 0, tiada = 0;
+            let tableHTML = '';
+            
+            for (let student of students) {
+                const record = attendance[student.id];
+                let status = '❌ TIADA';
+                let statusClass = '';
+                let time = '-';
+                
+                if (record) {
+                    if (record.status === 'HADIR') {
+                        status = '✅ HADIR';
+                        statusClass = 'badge-hadir';
+                        hadir++;
+                    } else if (record.status === 'LEWAT') {
+                        status = '⚠️ LEWAT';
+                        statusClass = 'badge-lewat';
+                        lewat++;
+                    }
+                    time = record.time || '-';
+                } else {
+                    tiada++;
+                }
+                
+                tableHTML += `<tr>
+                    <td>${student.name}</td>
+                    <td>${student.class}</td>
+                    <td><span class="${statusClass}">${status}</span></td>
+                    <td>${time}</td>
+                </tr>`;
+            }
+            
+            if (students.length === 0) {
+                tableHTML = '<tr><td colspan="4" class="text-center text-muted">Tiada pelajar dalam kelas ini</td></tr>';
+            }
+            
+            document.getElementById('reportTable').innerHTML = tableHTML;
+            document.getElementById('totalHadir').innerText = hadir;
+            document.getElementById('totalLewat').innerText = lewat;
+            document.getElementById('totalTiada').innerText = tiada;
+            
             Swal.close();
             
-            if (snapshot.exists()) {
-                // Data sudah wujud
-                const existingData = snapshot.val();
-                const existingName = existingData.name || "nama tidak diketahui";
-                const existingClass = existingData.class || "Kelas tidak dinyatakan";
-                
-                // Tunjukkan mesej amaran tapi tetap paparkan kad digital sedia ada (guna data dari DB)
-                await Swal.fire({
-                    title: '⚠️ Pelajar Sudah Berdaftar',
-                    html: `<strong>ID ${sanitizedId}</strong> telah didaftarkan.<br>Nama: ${existingName}<br>Kelas: ${existingClass}<br><br>Kad QR akan dipaparkan semula.`,
-                    icon: 'warning',
-                    confirmButtonColor: '#6366f1',
-                    background: '#1e293b',
-                    color: '#f8fafc'
-                });
-                // Papar kad dengan data sedia ada dari Firebase
-                document.getElementById('msgStatus').innerHTML = '<i class="fas fa-history me-1"></i> PELAJAR SEDIA ADA (kad sedia ada)';
-                displayStudentCard(existingName, sanitizedId, existingClass);
-                // sync select kelas? optional tak perlu override
-                document.getElementById('displayClassInfo').innerHTML = `<i class="fas fa-school me-1"></i> ${existingClass}`;
-            } 
-            else {
-                // Tiada data -> pendaftaran baru
-                // Simpan data ke Firebase
-                const newStudent = {
-                    name: studentName.toUpperCase(),
-                    class: studentClass,
-                    registeredAt: Date.now(),
-                    timestamp: new Date().toISOString()
-                };
-                await studentRef.set(newStudent);
-                
-                // Berjaya
-                await Swal.fire({
-                    icon: 'success',
-                    title: '✅ Pendaftaran Berjaya!',
-                    text: `Pelajar ${studentName.toUpperCase()} telah didaftarkan. Kad QR digital sedia.`,
-                    background: '#1e293b',
-                    color: '#fff',
-                    confirmButtonColor: '#10b981'
-                });
-                document.getElementById('msgStatus').innerHTML = '<i class="fas fa-check-circle me-1"></i> PENDAFTARAN BAHARU | KAD AKTIF';
-                displayStudentCard(studentName.toUpperCase(), sanitizedId, studentClass);
-                // kosongkan mesej dynamic class
-                document.getElementById('displayClassInfo').innerHTML = `<i class="fas fa-school me-1"></i> ${studentClass}`;
-            }
         } catch (error) {
             Swal.close();
-            console.error("Firebase error: ", error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Ralat Server',
-                text: 'Gagal berhubung dengan pangkalan data. Sila semak sambungan internet atau cuba sebentar lagi.',
-                background: '#1e293b',
-                color: '#fff'
-            });
+            Swal.fire('Ralat', 'Gagal memuatkan data', 'error');
         }
     }
     
-    // Optional: Auto detect jika ada studentId di URL parameter ?id=xxx (demo fast load)
-    function autoLoadFromURL() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const idParam = urlParams.get('id');
-        if (idParam && idParam.trim().length > 0) {
-            document.getElementById('stuID').value = idParam;
-            // Optional: but we don't auto search to avoid confusion. 
-        }
+    function exportToPDF() {
+        const element = document.getElementById('laporanTab').cloneNode(true);
+        Swal.fire('Muat turun PDF...', 'Laporan sedang disediakan', 'info');
+        
+        // Print logic
+        const win = window.open();
+        win.document.write(`
+            <html>
+            <head>
+                <title>Laporan Kehadiran Attend-X</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>
+                    body { padding: 30px; font-family: Arial; }
+                    .table-custom { width: 100%; border-collapse: collapse; }
+                    .table-custom th, .table-custom td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    .badge-hadir { background: #10b981; color: white; padding: 2px 8px; border-radius: 20px; }
+                    .badge-lewat { background: #f59e0b; color: white; padding: 2px 8px; border-radius: 20px; }
+                </style>
+            </head>
+            <body>
+                <h2>Laporan Kehadiran</h2>
+                <p>Tarikh: ${document.getElementById('reportDate').value}</p>
+                <p>Kelas: ${document.getElementById('filterClass').options[document.getElementById('filterClass').selectedIndex].text}</p>
+                <hr>
+                ${element.querySelector('.table-wrapper') ? element.querySelector('.table-wrapper').innerHTML : element.innerHTML}
+            </body>
+            </html>
+        `);
+        win.print();
+        win.close();
     }
     
-    // Tambahkan event listener Enter untuk akses mudah
-    function setupEnterListener() {
-        const inputs = ['stuID', 'stuName'];
-        inputs.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('keypress', function(event) {
-                    if (event.key === 'Enter') {
-                        event.preventDefault();
-                        checkAndRegister();
-                    }
-                });
-            }
-        });
-    }
+    // Load report on page load
+    setTimeout(() => {
+        if (document.getElementById('reportDate').value) loadReport();
+    }, 500);
     
-    // Juga tambahkan fungsi refresh untuk preview qr copy
-    window.addEventListener('load', () => {
-        autoLoadFromURL();
-        setupEnterListener();
-        // small extra: jika ada data tersimpan local? not needed
-    });
-    
-    // tambahkan fungsi untuk manual refresh QR jika diperlukan
-    window.refreshQR = function(idText) {
-        if(idText) generateQRCode('qr-result', idText);
-    };
-    
-    // Expose untuk console debugging
-    console.log("Attend-X Ready | Sistem Kad Pintar Pelajar");
+    window.openTab = openTab;
+    window.registerStudent = registerStudent;
+    window.loadReport = loadReport;
+    window.exportToPDF = exportToPDF;
 </script>
 
-<!-- Additional safety to ensure print layout hides buttons correctly -->
 <style>
     @media print {
-        .btn, button, .no-print, .no-print-all, .reg-card button, .d-flex.gap-3, footer, .form-control, .form-select, .form-label, .mb-3, .mb-4, .text-muted.small, h3, .text-center.mb-3, .btn-glow {
+        .nav-tab, .btn-primary-custom, .btn-outline-custom, .form-select, .form-control, .row.g-2 {
             display: none !important;
         }
-        #displayArea {
-            display: block !important;
-            margin-top: 0;
-            background: white;
-            color: black;
-            border: none;
-        }
-        .glass-card {
-            background: white;
+        .card-glass {
             box-shadow: none;
-            padding: 0.5rem;
-        }
-        .qr-card {
-            border: 2px solid #000;
-            background: white;
-        }
-        .student-badge {
-            background: #eef2ff;
-            color: #1e293b;
-        }
-        #displayName, #displayID, #msgStatus, #displayClassInfo {
-            color: #0f172a !important;
+            padding: 0;
         }
         body {
             background: white;
-        }
-        .reg-card {
-            max-width: 100%;
-            padding: 0.2rem;
+            padding: 0;
         }
     }
 </style>
