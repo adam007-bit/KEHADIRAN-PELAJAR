@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attend-X Pro | Sistem Kehadiran Sekolah</title>
+    <title>Attend-X Pro | Sistem Kad Matrik Pelajar</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
         * { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -20,7 +21,7 @@
             padding: 20px;
         }
         .container-custom {
-            max-width: 500px;
+            max-width: 550px;
             margin: 0 auto;
         }
         .card-glass {
@@ -48,13 +49,131 @@
             color: #4f46e5;
             width: 100%;
         }
-        .qr-box {
+        
+        /* =============== KAD MATRIK PROFESIONAL =============== */
+        .kad-matrik {
             background: white;
-            padding: 20px;
             border-radius: 20px;
-            display: inline-block;
-            margin: 15px 0;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            max-width: 400px;
+            margin: 0 auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        
+        /* Header Kad - Warna Sekolah */
+        .kad-header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .kad-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        .kad-header p {
+            margin: 5px 0 0;
+            font-size: 11px;
+            opacity: 0.8;
+        }
+        .school-logo {
+            font-size: 40px;
+            margin-bottom: 5px;
+        }
+        
+        /* Badan Kad */
+        .kad-body {
+            padding: 20px;
+            background: white;
+        }
+        
+        /* Foto / Avatar Area */
+        .avatar-area {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .avatar-circle {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .avatar-circle i {
+            font-size: 45px;
+            color: white;
+        }
+        
+        /* Maklumat Pelajar */
+        .info-row {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        .info-label {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .info-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        /* QR Code Area */
+        .qr-area {
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 15px;
+        }
+        .qr-label {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 5px;
+        }
+        
+        /* Footer Kad */
+        .kad-footer {
+            background: #f1f5f9;
+            padding: 12px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        .signature {
+            font-family: 'Brush Script MT', cursive;
+            font-size: 18px;
+            color: #1e3c72;
+        }
+        .footer-text {
+            font-size: 9px;
+            color: #64748b;
+        }
+        
+        /* Badge peranan */
+        .role-badge {
+            display: inline-block;
+            background: #e2e8f0;
+            color: #1e3c72;
+            font-size: 10px;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        /* Tab Navigation */
         .nav-tab {
             display: flex;
             gap: 10px;
@@ -83,6 +202,8 @@
         .tab-content.active {
             display: block;
         }
+        
+        /* Table Laporan */
         .table-custom {
             width: 100%;
             border-collapse: collapse;
@@ -94,6 +215,30 @@
         }
         .badge-hadir { background: #10b981; color: white; padding: 4px 12px; border-radius: 30px; font-size: 12px; }
         .badge-lewat { background: #f59e0b; color: white; padding: 4px 12px; border-radius: 30px; font-size: 12px; }
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #kadToPrint, #kadToPrint * {
+                visibility: visible;
+            }
+            #kadToPrint {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 20px;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .kad-matrik {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
     </style>
 </head>
 <body>
@@ -102,23 +247,23 @@
     <!-- Header -->
     <div class="text-center mb-4">
         <h1 class="text-white fw-bold">🎓 ATTEND-X PRO</h1>
-        <p class="text-white-50">Sistem Kehadiran Pintar SMK Putra</p>
+        <p class="text-white-50">Sistem Kad Matrik & Kehadiran Pintar</p>
     </div>
     
     <!-- Tab Navigation -->
-    <div class="nav-tab">
+    <div class="nav-tab no-print">
         <button class="tab-btn active" onclick="openTab('daftar')">📝 DAFTAR PELAJAR</button>
         <button class="tab-btn" onclick="openTab('laporan')">📊 LAPORAN GURU</button>
     </div>
     
-    <!-- TAB 1: DAFTAR PELAJAR (Pelajar guna ni) -->
+    <!-- TAB 1: DAFTAR PELAJAR -->
     <div id="daftarTab" class="tab-content active">
         <div class="card-glass">
-            <h3 class="text-center mb-3"><i class="fas fa-user-plus text-primary"></i> Daftar Kad QR</h3>
-            <p class="text-center text-muted small">Isi maklumat untuk dapatkan kad QR pelajar</p>
+            <h3 class="text-center mb-3"><i class="fas fa-id-card text-primary"></i> Daftar Kad Matrik</h3>
+            <p class="text-center text-muted small">Isi maklumat untuk terbitkan Kad Matrik</p>
             
-            <label class="form-label">ID Pelajar (No KP / Nombor Siri)</label>
-            <input type="text" id="studentID" class="form-control mb-3" placeholder="cth: 050101020304">
+            <label class="form-label">ID Pelajar (No KP / No Matrik)</label>
+            <input type="text" id="studentID" class="form-control mb-3" placeholder="cth: M24001 / 050101020304">
             
             <label class="form-label">Nama Penuh</label>
             <input type="text" id="studentName" class="form-control mb-3" placeholder="NUR AISYAH BINTI ABDULLAH">
@@ -134,34 +279,34 @@
             </select>
             
             <button onclick="registerStudent()" class="btn-primary-custom">
-                <i class="fas fa-qrcode me-2"></i> DAFTAR & JANA KAD QR
+                <i class="fas fa-qrcode me-2"></i> DAFTAR & TERBITKAN KAD
             </button>
             
-            <!-- Area papar QR -->
-            <div id="qrArea" class="text-center mt-4" style="display: none;">
+            <!-- Area Papar Kad Matrik -->
+            <div id="kadArea" class="mt-4" style="display: none;">
                 <hr>
-                <div class="qr-box">
-                    <div id="qrcode"></div>
+                <div id="kadToPrint">
+                    <!-- Kad Matrik akan dijana di sini -->
                 </div>
-                <h5 id="displayName" class="mt-2"></h5>
-                <p id="displayID" class="text-muted"></p>
-                <button onclick="window.print()" class="btn-outline-custom mt-2">
-                    <i class="fas fa-print me-2"></i> Cetak Kad
-                </button>
-                <p class="text-success small mt-2">
-                    <i class="fas fa-check-circle"></i> Simpan kad ini. Scan depan pagar sekolah untuk kehadiran!
-                </p>
+                <div class="text-center mt-3 no-print">
+                    <button onclick="printCard()" class="btn-outline-custom" style="width: auto; padding: 10px 25px;">
+                        <i class="fas fa-print me-2"></i> Cetak Kad Matrik
+                    </button>
+                    <button onclick="downloadCardAsImage()" class="btn-outline-custom mt-2" style="width: auto; padding: 10px 25px; background: #4f46e5; color: white; border: none;">
+                        <i class="fas fa-download me-2"></i> Simpan sebagai Gambar
+                    </button>
+                </div>
             </div>
         </div>
         
-        <!-- Info untuk pelajar -->
-        <div class="card-glass mt-3">
+        <!-- Info Cara Guna -->
+        <div class="card-glass mt-3 no-print">
             <div class="text-center">
                 <i class="fas fa-info-circle text-info fa-2x mb-2"></i>
-                <h5>Cara Guna Kad QR</h5>
-                <p class="small text-muted">1. Daftar dan dapatkan kad QR di atas<br>
-                2. Simpan / cetak kad tersebut<br>
-                3. Scan kad di depan pagar sekolah setiap kali hadir</p>
+                <h5>Cara Guna Kad Matrik</h5>
+                <p class="small text-muted">1. Daftar dan dapatkan Kad Matrik di atas<br>
+                2. Cetak / simpan kad tersebut<br>
+                3. Scan QR di depan pagar sekolah setiap kali hadir</p>
             </div>
         </div>
     </div>
@@ -171,7 +316,6 @@
         <div class="card-glass">
             <h3 class="text-center mb-3"><i class="fas fa-chart-line text-success"></i> Laporan Kehadiran</h3>
             
-            <!-- Filter -->
             <div class="row g-2 mb-3">
                 <div class="col-6">
                     <select id="filterClass" class="form-select">
@@ -226,10 +370,6 @@
                     </tbody>
                 </table>
             </div>
-            
-            <button onclick="exportToPDF()" class="btn-outline-custom mt-3">
-                <i class="fas fa-file-pdf me-2"></i> Export ke PDF
-            </button>
         </div>
     </div>
 </div>
@@ -247,13 +387,85 @@
     // Set tarikh hari ini
     document.getElementById('reportDate').valueAsDate = new Date();
     
+    let currentStudent = { name: '', id: '', class: '' };
+    
     // Tab function
     function openTab(tab) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        
         document.getElementById(tab + 'Tab').classList.add('active');
         event.target.classList.add('active');
+    }
+    
+    // Fungsi untuk menghasilkan KAD MATRIK
+    function generateKadMatrik(name, id, className) {
+        const kadHTML = `
+            <div class="kad-matrik">
+                <div class="kad-header">
+                    <div class="school-logo">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h3>SMK PUTRA</h3>
+                    <p>Kad Matrik Pelajar</p>
+                </div>
+                
+                <div class="kad-body">
+                    <div class="avatar-area">
+                        <div class="avatar-circle">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="role-badge">PELAJAR AKTIF</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label"><i class="fas fa-user"></i> NAMA PENUH</div>
+                        <div class="info-value">${escapeHtml(name)}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label"><i class="fas fa-id-card"></i> NO. MATRIK / ID</div>
+                        <div class="info-value">${escapeHtml(id)}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label"><i class="fas fa-chalkboard-user"></i> KELAS / TINGKATAN</div>
+                        <div class="info-value">${escapeHtml(className)}</div>
+                    </div>
+                    
+                    <div class="qr-area">
+                        <div id="qrKadMatrik"></div>
+                        <div class="qr-label">Scan QR untuk kehadiran</div>
+                    </div>
+                </div>
+                
+                <div class="kad-footer">
+                    <div class="signature">~ Digital Attendance System ~</div>
+                    <div class="footer-text">Kad ini sah untuk kehadiran harian | Attend-X Pro</div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('kadToPrint').innerHTML = kadHTML;
+        
+        // Generate QR Code
+        setTimeout(() => {
+            const qrContainer = document.getElementById('qrKadMatrik');
+            if (qrContainer) {
+                qrContainer.innerHTML = '';
+                new QRCode(qrContainer, {
+                    text: id,
+                    width: 120,
+                    height: 120,
+                    colorDark: "#1e3c72",
+                    colorLight: "#ffffff"
+                });
+            }
+        }, 100);
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text;
     }
     
     // DAFTAR PELAJAR
@@ -272,28 +484,65 @@
         
         if (snap.exists()) {
             Swal.fire('Sudah Berdaftar', `Pelajar ${snap.val().name} sudah wujud`, 'info');
-            showQR(name.toUpperCase(), id);
+            generateKadMatrik(snap.val().name, id, snap.val().class);
+            document.getElementById('kadArea').style.display = 'block';
         } else {
             await db.ref('pelajar/' + id).set({
                 name: name.toUpperCase(),
                 class: cls,
                 registeredAt: Date.now()
             });
-            Swal.fire('Berjaya!', 'Kad QR telah dijana', 'success');
-            showQR(name.toUpperCase(), id);
+            Swal.fire({
+                title: 'Berjaya!',
+                html: `Kad Matrik untuk <strong>${name.toUpperCase()}</strong> telah diterbitkan`,
+                icon: 'success',
+                confirmButtonText: 'OK'
+            });
+            generateKadMatrik(name.toUpperCase(), id, cls);
+            document.getElementById('kadArea').style.display = 'block';
         }
+        
+        currentStudent = { name: name.toUpperCase(), id: id, class: cls };
     }
     
-    function showQR(name, id) {
-        document.getElementById('qrArea').style.display = 'block';
-        document.getElementById('displayName').innerText = name;
-        document.getElementById('displayID').innerHTML = `<i class="fas fa-id-card"></i> ID: ${id}`;
-        document.getElementById('qrcode').innerHTML = '';
-        new QRCode(document.getElementById('qrcode'), {
-            text: id,
-            width: 150,
-            height: 150
+    // Cetak Kad
+    function printCard() {
+        const originalTitle = document.title;
+        document.title = "Kad Matrik - " + currentStudent.name;
+        window.print();
+        document.title = originalTitle;
+    }
+    
+    // Download sebagai Gambar
+    async function downloadCardAsImage() {
+        const element = document.getElementById('kadToPrint');
+        if (!element) return;
+        
+        Swal.fire({
+            title: 'Memproses...',
+            text: 'Sedang menjana gambar kad',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
         });
+        
+        try {
+            const canvas = await html2canvas(element, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                logging: false
+            });
+            
+            const link = document.createElement('a');
+            link.download = `kad_matrik_${currentStudent.id}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            
+            Swal.close();
+            Swal.fire('Berjaya!', 'Gambar kad telah disimpan', 'success');
+        } catch (error) {
+            Swal.close();
+            Swal.fire('Ralat', 'Gagal menjana gambar', 'error');
+        }
     }
     
     // LAPORAN GURU
@@ -309,23 +558,19 @@
         Swal.fire({ title: 'Memuatkan...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
         
         try {
-            // Dapatkan semua pelajar
             const studentsSnap = await db.ref('pelajar').once('value');
             let students = [];
             for (let [id, data] of Object.entries(studentsSnap.val() || {})) {
                 students.push({ id, name: data.name, class: data.class });
             }
             
-            // Filter mengikut kelas
             if (selectedClass !== 'ALL') {
                 students = students.filter(s => s.class === selectedClass);
             }
             
-            // Dapatkan data kehadiran untuk tarikh tersebut
             const attendanceSnap = await db.ref(`kehadiran/${selectedDate}`).once('value');
             const attendance = attendanceSnap.val() || {};
             
-            // Kira stat
             let hadir = 0, lewat = 0, tiada = 0;
             let tableHTML = '';
             
@@ -375,38 +620,6 @@
         }
     }
     
-    function exportToPDF() {
-        const element = document.getElementById('laporanTab').cloneNode(true);
-        Swal.fire('Muat turun PDF...', 'Laporan sedang disediakan', 'info');
-        
-        // Print logic
-        const win = window.open();
-        win.document.write(`
-            <html>
-            <head>
-                <title>Laporan Kehadiran Attend-X</title>
-                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-                <style>
-                    body { padding: 30px; font-family: Arial; }
-                    .table-custom { width: 100%; border-collapse: collapse; }
-                    .table-custom th, .table-custom td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                    .badge-hadir { background: #10b981; color: white; padding: 2px 8px; border-radius: 20px; }
-                    .badge-lewat { background: #f59e0b; color: white; padding: 2px 8px; border-radius: 20px; }
-                </style>
-            </head>
-            <body>
-                <h2>Laporan Kehadiran</h2>
-                <p>Tarikh: ${document.getElementById('reportDate').value}</p>
-                <p>Kelas: ${document.getElementById('filterClass').options[document.getElementById('filterClass').selectedIndex].text}</p>
-                <hr>
-                ${element.querySelector('.table-wrapper') ? element.querySelector('.table-wrapper').innerHTML : element.innerHTML}
-            </body>
-            </html>
-        `);
-        win.print();
-        win.close();
-    }
-    
     // Load report on page load
     setTimeout(() => {
         if (document.getElementById('reportDate').value) loadReport();
@@ -415,21 +628,29 @@
     window.openTab = openTab;
     window.registerStudent = registerStudent;
     window.loadReport = loadReport;
-    window.exportToPDF = exportToPDF;
+    window.printCard = printCard;
+    window.downloadCardAsImage = downloadCardAsImage;
 </script>
 
 <style>
     @media print {
-        .nav-tab, .btn-primary-custom, .btn-outline-custom, .form-select, .form-control, .row.g-2 {
+        .no-print {
             display: none !important;
-        }
-        .card-glass {
-            box-shadow: none;
-            padding: 0;
         }
         body {
             background: white;
             padding: 0;
+            margin: 0;
+        }
+        .kad-matrik {
+            box-shadow: none;
+            border: 1px solid #ddd;
+            margin: 0 auto;
+        }
+        .container-custom {
+            padding: 0;
+            margin: 0;
+            max-width: 100%;
         }
     }
 </style>
