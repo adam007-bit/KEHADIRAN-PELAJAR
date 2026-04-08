@@ -2,586 +2,280 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=yes">
-    <title>Attend-X Pro | Laporan Analisis Kehadiran Pintar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Guru | Attend-X Pro - Laporan Kehadiran</title>
     
-    <!-- Bootstrap 5 + Font Awesome + Google Fonts -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-    
-    <!-- Firebase & SweetAlert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        * { font-family: 'Inter', sans-serif; }
-        :root { 
-            --bg-dark: #0a0f1c; 
-            --card-bg: #111827; 
-            --accent: #4f46e5; 
-            --accent-glow: #6366f1;
-            --border-light: #1f2937;
+        * { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body {
+            background: #f0f2f5;
+            padding: 20px;
         }
-        body { 
-            background: radial-gradient(circle at 10% 20%, #0f172a, #030712); 
-            color: #f3f4f6; 
-            min-height: 100vh;
-            padding: 2rem 1rem;
-        }
-        .glass-card {
-            background: rgba(17, 24, 39, 0.95);
-            backdrop-filter: blur(4px);
-            border-radius: 1.75rem;
-            border: 1px solid rgba(99, 102, 241, 0.25);
-            transition: all 0.2s;
-        }
-        .filter-control {
-            background-color: #1e293b;
-            border: 1px solid #334155;
-            color: #f1f5f9;
-            border-radius: 0.85rem;
-            padding: 0.6rem 1rem;
-            transition: 0.2s;
-        }
-        .filter-control:focus {
-            background-color: #0f172a;
-            border-color: #818cf8;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+        .header-guru {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
             color: white;
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
-        .btn-primary-custom {
-            background: linear-gradient(105deg, #4f46e5 0%, #7c3aed 100%);
-            border: none;
-            border-radius: 2rem;
-            padding: 0.7rem 1rem;
-            font-weight: 700;
-            box-shadow: 0 8px 18px -6px #4f46e5;
-            transition: transform 0.1s;
+        .report-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
         }
-        .btn-primary-custom:hover {
-            transform: translateY(-2px);
-            background: linear-gradient(105deg, #6366f1, #8b5cf6);
-        }
-        .stat-card {
-            background: #1e293b;
-            border-radius: 1.25rem;
-            padding: 1rem 0.5rem;
+        .stat-box {
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
             text-align: center;
-            transition: all 0.2s;
-            border-bottom: 3px solid transparent;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-        .stat-hadir { border-bottom-color: #10b981; }
-        .stat-lewat { border-bottom-color: #f59e0b; }
-        .stat-ponteng { border-bottom-color: #ef4444; }
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-        }
+        .stat-box.hadir { border-bottom: 4px solid #10b981; }
+        .stat-box.lewat { border-bottom: 4px solid #f59e0b; }
+        .stat-box.tiada { border-bottom: 4px solid #ef4444; }
+        .stat-number { font-size: 2rem; font-weight: 800; margin: 5px 0; }
+        
         .table-custom {
-            background-color: transparent;
-            color: #e2e8f0;
+            width: 100%;
+            border-collapse: collapse;
         }
-        .table-custom thead th {
-            background-color: #0f172a;
-            border-bottom: 2px solid #334155;
-            color: #a5b4fc;
+        .table-custom th, .table-custom td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .table-custom th {
+            background: #f8fafc;
             font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
+            color: #1e3c72;
         }
-        .table-custom td, .table-custom th {
-            padding: 1rem 0.75rem;
-            vertical-align: middle;
-            border-color: #1f2937;
+        .badge-hadir { background: #10b981; color: white; padding: 4px 12px; border-radius: 30px; font-size: 12px; }
+        .badge-lewat { background: #f59e0b; color: white; padding: 4px 12px; border-radius: 30px; font-size: 12px; }
+        .badge-tiada { background: #ef4444; color: white; padding: 4px 12px; border-radius: 30px; font-size: 12px; }
+        
+        .btn-print {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-weight: 600;
         }
-        .badge-percent {
-            font-weight: 700;
-            padding: 0.45rem 0.9rem;
-            border-radius: 2rem;
-            font-size: 0.8rem;
-        }
-        .badge-high {
-            background: #10b98120;
-            color: #34d399;
-            border: 1px solid #10b98140;
-        }
-        .badge-mid {
-            background: #f59e0b20;
-            color: #fbbf24;
-            border: 1px solid #f59e0b40;
-        }
-        .badge-low {
-            background: #ef444420;
-            color: #f87171;
-            border: 1px solid #ef444440;
-        }
-        .print-header {
-            display: none;
-        }
+        .btn-print:hover { background: #4338ca; color: white; }
+        
         @media print {
-            body {
-                background: white;
-                padding: 0;
-                margin: 0;
-            }
-            .no-print, .btn-primary-custom, .filter-control, button, .d-flex.justify-content-end, .row.mb-4 {
-                display: none !important;
-            }
-            .glass-card {
-                background: white !important;
-                border: none !important;
-                box-shadow: none !important;
-                padding: 0.5rem;
-                margin: 0;
-            }
-            .stat-card {
-                background: #f3f4f6;
-                border: 1px solid #d1d5db;
-                color: black;
-            }
-            .table-custom thead th {
-                background-color: #e5e7eb;
-                color: #1f2937;
-            }
-            .table-custom td, .table-custom th {
-                border-color: #ccc;
-                color: black;
-            }
-            .badge-percent {
-                border: 1px solid #000;
-                background: white !important;
-                color: black !important;
-            }
-            .stat-number {
-                color: #111;
-            }
-            #reportPaper {
-                box-shadow: none;
-            }
-            .print-header {
-                display: block;
-                text-align: center;
-                margin-bottom: 1rem;
-            }
-        }
-        .info-icon {
-            cursor: help;
-            font-size: 0.8rem;
-            margin-left: 5px;
-            color: #94a3b8;
-        }
-        footer {
-            font-size: 0.7rem;
-            text-align: center;
-            margin-top: 1.5rem;
-            color: #4b5563;
+            body { background: white; padding: 0; }
+            .no-print { display: none !important; }
+            .report-card { box-shadow: none; padding: 0; }
+            .table-custom th { background: #e2e8f0; }
         }
     </style>
 </head>
 <body>
 
-<div class="container-lg">
-    <div class="glass-card p-4 p-xl-5 shadow-xl">
-        <!-- Header section (visible on screen and print) -->
-        <div class="print-header mb-3">
-            <h2 class="fw-bold text-dark">ATTEND-X PRO</h2>
-            <hr class="border-2 border-dark">
+<div class="container">
+    <!-- Header -->
+    <div class="header-guru d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h2><i class="fas fa-chalkboard-user me-2"></i> Portal Guru</h2>
+            <p class="mb-0 opacity-75">SMK Putra - Sistem Laporan Kehadiran</p>
         </div>
-
-        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 no-print">
-            <div>
-                <h2 class="fw-bold mb-0"><i class="fas fa-chart-line text-info me-2"></i> LAPORAN BERKALA</h2>
-                <p class="text-secondary-emphasis text-muted small mt-1">Analisis kehadiran, ketepatan masa & statistik kelas</p>
-            </div>
-            <div class="mt-2 mt-sm-0">
-                <button onclick="window.print()" class="btn btn-outline-light rounded-pill px-4">
-                    <i class="fas fa-print me-2"></i>Cetak Laporan
-                </button>
-            </div>
+        <div class="mt-2 mt-sm-0">
+            <button onclick="window.print()" class="btn-print no-print">
+                <i class="fas fa-print me-2"></i> Cetak Laporan
+            </button>
         </div>
-
-        <!-- Filter panel -->
-        <div class="row g-3 mb-5 no-print align-items-end">
-            <div class="col-md-3">
-                <label class="small text-uppercase fw-semibold text-secondary-emphasis mb-1"><i class="fas fa-layer-group me-1"></i> Kelas</label>
-                <select id="filterClass" class="form-select filter-control">
+    </div>
+    
+    <!-- Card Laporan -->
+    <div class="report-card">
+        <h4 class="mb-4"><i class="fas fa-chart-line text-primary me-2"></i> Laporan Kehadiran Harian</h4>
+        
+        <!-- Filter -->
+        <div class="row g-3 mb-4 no-print">
+            <div class="col-md-4">
+                <label class="form-label small text-muted">Pilih Kelas</label>
+                <select id="filterClass" class="form-select">
                     <option value="ALL">📚 SEMUA KELAS</option>
-                    <option value="1 IBNU SINA">📘 1 IBNU SINA</option>
-                    <option value="1 KARISMA">⭐ 1 KARISMA</option>
-                    <option value="1 SIMFONI">🎵 1 SIMFONI</option>
-                    <option value="2 AL-FARABI">🧪 2 AL-FARABI</option>
-                    <option value="2 AL-BIRUNI">🔭 2 AL-BIRUNI</option>
-                    <option value="3 IMAM AL-GHAZALI">📖 3 IMAM AL-GHAZALI</option>
+                    <option value="1 IBNU SINA">1 IBNU SINA</option>
+                    <option value="1 KARISMA">1 KARISMA</option>
+                    <option value="1 SIMFONI">1 SIMFONI</option>
+                    <option value="2 AL-FARABI">2 AL-FARABI</option>
+                    <option value="2 AL-BIRUNI">2 AL-BIRUNI</option>
+                    <option value="3 IMAM AL-GHAZALI">3 IMAM AL-GHAZALI</option>
                 </select>
             </div>
-            <div class="col-md-3">
-                <label class="small text-uppercase fw-semibold text-secondary-emphasis mb-1"><i class="far fa-calendar-alt me-1"></i> Tarikh Mula</label>
-                <input type="date" id="startDate" class="form-control filter-control">
+            <div class="col-md-4">
+                <label class="form-label small text-muted">Tarikh Laporan</label>
+                <input type="date" id="reportDate" class="form-control">
             </div>
-            <div class="col-md-3">
-                <label class="small text-uppercase fw-semibold text-secondary-emphasis mb-1"><i class="far fa-calendar-check me-1"></i> Tarikh Tamat</label>
-                <input type="date" id="endDate" class="form-control filter-control">
-            </div>
-            <div class="col-md-3">
-                <button onclick="generateReport()" class="btn btn-primary-custom w-100 fw-bold py-2">
-                    <i class="fas fa-chart-simple me-2"></i> JANA LAPORAN
+            <div class="col-md-4">
+                <label class="form-label small text-muted">&nbsp;</label>
+                <button onclick="loadReport()" class="btn btn-primary w-100 py-2" style="background: #1e3c72; border: none;">
+                    <i class="fas fa-search me-2"></i> JANA LAPORAN
                 </button>
             </div>
         </div>
-
-        <!-- Report Paper Area -->
-        <div id="reportPaper">
-            <!-- Header laporan dinamis -->
-            <div class="text-center mb-4 border-bottom border-secondary pb-3">
-                <h3 class="fw-extrabold" style="background: linear-gradient(120deg, #c084fc, #60a5fa); -webkit-background-clip: text; background-clip: text; color: transparent;">LAPORAN KEHADIRAN MURID</h3>
-                <p class="mb-1 fw-bold text-info" id="displayClassName">SEMUA KELAS</p>
-                <p class="mb-0 small text-muted" id="printDateRange">Sila pilih julat tarikh & klik JANA</p>
-                <hr class="mt-2 opacity-50" style="width: 80px; margin: 10px auto;">
-            </div>
-
-            <!-- Kad statistik ringkasan -->
-            <div class="row g-3 mb-5 text-center">
-                <div class="col-md-4">
-                    <div class="stat-card stat-hadir">
-                        <i class="fas fa-check-circle text-success fs-4 mb-1"></i>
-                        <small class="d-block text-secondary-emphasis">Purata Kehadiran (Hadir)</small>
-                        <div class="stat-number text-success" id="sumHadir">0%</div>
-                        <span class="badge bg-success bg-opacity-25 text-success px-2 mt-1">Hadir tepat masa</span>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stat-card stat-lewat">
-                        <i class="fas fa-clock text-warning fs-4 mb-1"></i>
-                        <small class="d-block text-secondary-emphasis">Purata Keterlambatan</small>
-                        <div class="stat-number text-warning" id="sumLewat">0%</div>
-                        <span class="badge bg-warning bg-opacity-25 text-warning px-2 mt-1">Lewat / lewat hadir</span>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stat-card stat-ponteng">
-                        <i class="fas fa-ban text-danger fs-4 mb-1"></i>
-                        <small class="d-block text-secondary-emphasis">Purata Ketidakhadiran</small>
-                        <div class="stat-number text-danger" id="sumPonteng">0%</div>
-                        <span class="badge bg-danger bg-opacity-25 text-danger px-2 mt-1">Ponteng / tidak hadir</span>
-                    </div>
+        
+        <!-- Ringkasan Statistik -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="stat-box hadir">
+                    <i class="fas fa-check-circle text-success fs-4"></i>
+                    <div class="stat-number text-success" id="totalHadir">0</div>
+                    <small class="text-muted">Pelajar HADIR</small>
                 </div>
             </div>
-
-            <!-- Jadual Laporan Pelajar -->
-            <div class="table-responsive rounded-3 overflow-hidden">
-                <table class="table table-custom table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th><i class="fas fa-user-graduate me-1"></i> Nama Murid</th>
-                            <th><i class="fas fa-school me-1"></i> Kelas</th>
-                            <th class="text-center"><i class="fas fa-calendar-day me-1"></i> Hadir (H)</th>
-                            <th class="text-center"><i class="fas fa-hourglass-half me-1"></i> Lewat (L)</th>
-                            <th class="text-center"><i class="fas fa-chart-pie me-1"></i> % Kehadiran Efektif</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reportTableBody">
-                        <tr class="text-center">
-                            <td colspan="5" class="py-5 text-muted">
-                                <i class="fas fa-chart-line fa-2x mb-2 d-block opacity-50"></i>
-                                Klik butang <strong class="text-info">"JANA LAPORAN"</strong> untuk melihat data kehadiran.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="col-md-4">
+                <div class="stat-box lewat">
+                    <i class="fas fa-clock text-warning fs-4"></i>
+                    <div class="stat-number text-warning" id="totalLewat">0</div>
+                    <small class="text-muted">Pelajar LEWAT</small>
+                </div>
             </div>
-            <footer class="no-print mt-4">
-                <i class="fas fa-database me-1"></i> Data masa nyata Firebase · Attend-X Pro Analytics
-            </footer>
-            <div class="print-only mt-3 small text-center text-muted" style="display: none;">© Attend-X | Laporan Dijana Secara Automatik</div>
+            <div class="col-md-4">
+                <div class="stat-box tiada">
+                    <i class="fas fa-times-circle text-danger fs-4"></i>
+                    <div class="stat-number text-danger" id="totalTiada">0</div>
+                    <small class="text-muted">Pelajar TIADA</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Jadual Laporan -->
+        <div style="overflow-x: auto;">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-user me-1"></i> Nama Pelajar</th>
+                        <th><i class="fas fa-school me-1"></i> Kelas</th>
+                        <th><i class="fas fa-flag-checkered me-1"></i> Status</th>
+                        <th><i class="fas fa-clock me-1"></i> Masa Hadir</th>
+                    </tr>
+                </thead>
+                <tbody id="reportTable">
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            <i class="fas fa-calendar-alt fa-2x mb-2 d-block opacity-50"></i>
+                            Pilih tarikh dan klik JANA LAPORAN
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="text-muted small mt-3 pt-2 border-top no-print">
+            <i class="fas fa-info-circle me-1"></i> * HADIR: Sebelum 7:30 pagi | LEWAT: Selepas 7:30 pagi
         </div>
     </div>
 </div>
 
 <script>
-    // Firebase Configuration (Gunakan config yang sama seperti keperluan)
     const firebaseConfig = {
         apiKey: "AIzaSyA03bLm1Ztt6TzF-jzOa9CpjZn7mEYtIlQ",
-        authDomain: "kehadiran-47efc.firebaseapp.com",
-        projectId: "kehadiran-47efc",
         databaseURL: "https://kehadiran-47efc-default-rtdb.asia-southeast1.firebasedatabase.app",
-        storageBucket: "kehadiran-47efc.firebasestorage.app",
-        appId: "1:523088126436:web:6fb51d9888bcd18f7267f1"
+        projectId: "kehadiran-47efc",
     };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
     
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    } else {
-        firebase.app();
-    }
-    const database = firebase.database();
+    // Set tarikh hari ini
+    document.getElementById('reportDate').valueAsDate = new Date();
     
-    // Set default tarikh hari ini & seminggu lepas untuk demo
-    const today = new Date();
-    const weekAgo = new Date();
-    weekAgo.setDate(today.getDate() - 6);
-    document.getElementById('startDate').valueAsDate = weekAgo;
-    document.getElementById('endDate').valueAsDate = today;
-    
-    // Fungsi utama untuk menjana laporan lengkap
-    async function generateReport() {
-        const startDateRaw = document.getElementById('startDate').value;
-        const endDateRaw = document.getElementById('endDate').value;
+    async function loadReport() {
         const selectedClass = document.getElementById('filterClass').value;
+        const selectedDate = document.getElementById('reportDate').value;
         
-        // Validasi tarikh
-        if (!startDateRaw || !endDateRaw) {
-            Swal.fire('Tarikh tidak lengkap', 'Sila pilih tarikh mula dan tarikh tamat.', 'warning');
+        if (!selectedDate) {
+            Swal.fire('Error', 'Pilih tarikh laporan', 'error');
             return;
         }
         
-        if (new Date(startDateRaw) > new Date(endDateRaw)) {
-            Swal.fire('Ralat Julat', 'Tarikh mula tidak boleh melebihi tarikh tamat.', 'error');
-            return;
-        }
-        
-        // UI loading
-        Swal.fire({
-            title: 'Menganalisis data...',
-            text: 'Mengambil rekod kehadiran & pelajar',
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-        });
+        Swal.fire({ title: 'Memuatkan data...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
         
         try {
-            // 1. Dapatkan semua pelajar dari Firebase 'pelajar'
-            const studentsSnapshot = await database.ref('pelajar').once('value');
-            const allStudents = studentsSnapshot.val() || {};
-            let studentList = Object.keys(allStudents).map(id => ({
-                id: id,
-                name: allStudents[id].name || "N/A",
-                class: allStudents[id].class || "Tiada Kelas"
-            }));
-            
-            // Filter mengikut kelas jika bukan "ALL"
-            let filteredStudents = studentList;
-            if (selectedClass !== "ALL") {
-                filteredStudents = studentList.filter(s => s.class === selectedClass);
+            // Dapatkan semua pelajar
+            const studentsSnap = await db.ref('pelajar').once('value');
+            let students = [];
+            for (let [id, data] of Object.entries(studentsSnap.val() || {})) {
+                students.push({ id, name: data.name, class: data.class });
             }
             
-            if (filteredStudents.length === 0) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Tiada Pelajar',
-                    text: `Tiada pelajar dalam kelas ${selectedClass === "ALL" ? "pangkalan data" : selectedClass}. Sila daftar pelajar terlebih dahulu.`,
-                    background: '#1e293b',
-                    color: '#fff'
-                });
-                document.getElementById('reportTableBody').innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">🚫 Tiada data pelajar untuk kelas ini. </td></tr>`;
-                document.getElementById('sumHadir').innerText = "0%";
-                document.getElementById('sumLewat').innerText = "0%";
-                document.getElementById('sumPonteng').innerText = "0%";
-                Swal.close();
-                return;
+            // Filter ikut kelas
+            if (selectedClass !== 'ALL') {
+                students = students.filter(s => s.class === selectedClass);
             }
             
-            // 2. Hasilkan senarai tarikh dalam julat (termasuk kedua-dua hujung)
-            let dateRange = [];
-            let currentDate = new Date(startDateRaw);
-            const endDateObj = new Date(endDateRaw);
-            while (currentDate <= endDateObj) {
-                const dateStr = currentDate.toISOString().split('T')[0];
-                dateRange.push(dateStr);
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
+            // Dapatkan data kehadiran
+            const attendanceSnap = await db.ref(`kehadiran/${selectedDate}`).once('value');
+            const attendance = attendanceSnap.val() || {};
             
-            const totalSchoolDays = dateRange.length;
-            if (totalSchoolDays === 0) {
-                Swal.fire('Julat tarikh kosong', 'Tiada hari dalam tempoh pilihan.', 'error');
-                Swal.close();
-                return;
-            }
+            let hadir = 0, lewat = 0, tiada = 0;
+            let tableHTML = '';
             
-            // 3. Kumpul data kehadiran untuk setiap tarikh secara batch (gunakan Promise.all untuk optima)
-            const attendancePromises = dateRange.map(date => database.ref(`kehadiran/${date}`).once('value'));
-            const attendanceSnapshots = await Promise.all(attendancePromises);
+            // Susun ikut nama
+            students.sort((a,b) => a.name.localeCompare(b.name));
             
-            // Mapping tarikh -> data kehadiran (objek dengan key studentID: status)
-            const attendanceMap = {};
-            dateRange.forEach((date, idx) => {
-                const snap = attendanceSnapshots[idx];
-                attendanceMap[date] = snap.val() || {};
-            });
-            
-            // 4. Proses setiap pelajar untuk kiraan hadir & lewat
-            const studentReport = [];
-            let totalHadirRatioSum = 0;
-            let totalLewatRatioSum = 0;
-            
-            for (let student of filteredStudents) {
-                let hadirCount = 0;
-                let lewatCount = 0;
+            for (let student of students) {
+                const record = attendance[student.id];
+                let status = 'TIADA';
+                let statusClass = 'badge-tiada';
+                let time = '-';
                 
-                for (let date of dateRange) {
-                    const dayAttendance = attendanceMap[date];
-                    const studentStatusObj = dayAttendance[student.id];
-                    if (studentStatusObj) {
-                        const status = studentStatusObj.status;
-                        if (status === "HADIR") hadirCount++;
-                        else if (status === "LEWAT") lewatCount++;
-                        // status lain (ponteng / tiada) = tidak dihitung sebagai hadir/lewat
+                if (record) {
+                    if (record.status === 'HADIR') {
+                        status = 'HADIR';
+                        statusClass = 'badge-hadir';
+                        hadir++;
+                    } else if (record.status === 'LEWAT') {
+                        status = 'LEWAT';
+                        statusClass = 'badge-lewat';
+                        lewat++;
                     }
+                    time = record.time || '-';
+                } else {
+                    tiada++;
                 }
                 
-                const totalHadirLewat = hadirCount + lewatCount;
-                const attendancePercentage = totalSchoolDays > 0 ? (totalHadirLewat / totalSchoolDays) * 100 : 0;
-                const finalPercent = Math.min(100, attendancePercentage);
-                
-                // Sum untuk kiraan purata peratus kehadiran dan peratus lewat di peringkat kelas
-                // Purata peratus hadir tepat: (hadirCount / totalSchoolDays) * 100
-                const percentHadir = totalSchoolDays > 0 ? (hadirCount / totalSchoolDays) * 100 : 0;
-                const percentLewat = totalSchoolDays > 0 ? (lewatCount / totalSchoolDays) * 100 : 0;
-                
-                totalHadirRatioSum += percentHadir;
-                totalLewatRatioSum += percentLewat;
-                
-                studentReport.push({
-                    name: student.name,
-                    class: student.class,
-                    hadir: hadirCount,
-                    lewat: lewatCount,
-                    percent: finalPercent.toFixed(1),
-                    rawPercentHadir: percentHadir,
-                    rawPercentLewat: percentLewat
-                });
+                tableHTML += `<tr>
+                    <td><strong>${student.name}</strong></td>
+                    <td>${student.class}</td>
+                    <td><span class="${statusClass}">${status}</span></td>
+                    <td>${time}</td>
+                </tr>`;
             }
             
-            // 5. Paparkan data dalam jadual & update statistik
-            const tbody = document.getElementById('reportTableBody');
-            if (studentReport.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center">Tiada rekod pelajar untuk dipaparkan</td></tr>`;
-            } else {
-                let htmlRows = "";
-                studentReport.forEach(s => {
-                    let badgeClass = "badge-high";
-                    let percentVal = parseFloat(s.percent);
-                    if (percentVal < 60) badgeClass = "badge-low";
-                    else if (percentVal < 85) badgeClass = "badge-mid";
-                    else badgeClass = "badge-high";
-                    
-                    htmlRows += `
-                        <tr>
-                            <td class="fw-semibold">${escapeHtml(s.name)}</td>
-                            <td>${escapeHtml(s.class)}</td>
-                            <td class="text-center text-success fw-bold">${s.hadir} hari</td>
-                            <td class="text-center text-warning fw-bold">${s.lewat} hari</td>
-                            <td class="text-center">
-                                <span class="badge-percent ${badgeClass} d-inline-block w-75">${s.percent}%</span>
-                            </td>
-                        </tr>
-                    `;
-                });
-                tbody.innerHTML = htmlRows;
+            if (students.length === 0) {
+                tableHTML = '<tr><td colspan="4" class="text-center text-muted">Tiada pelajar dalam kelas ini</td></tr>';
             }
             
-            // Kira purata keseluruhan (keseluruhan kelas)
-            const totalStudents = studentReport.length;
-            let avgHadirPercent = totalStudents > 0 ? (totalHadirRatioSum / totalStudents) : 0;
-            let avgLewatPercent = totalStudents > 0 ? (totalLewatRatioSum / totalStudents) : 0;
-            let avgPontengPercent = Math.max(0, 100 - (avgHadirPercent + avgLewatPercent));
+            document.getElementById('reportTable').innerHTML = tableHTML;
+            document.getElementById('totalHadir').innerText = hadir;
+            document.getElementById('totalLewat').innerText = lewat;
+            document.getElementById('totalTiada').innerText = tiada;
             
-            document.getElementById('sumHadir').innerHTML = Math.round(avgHadirPercent) + "%";
-            document.getElementById('sumLewat').innerHTML = Math.round(avgLewatPercent) + "%";
-            document.getElementById('sumPonteng').innerHTML = Math.round(avgPontengPercent) + "%";
-            
-            // Update header teks
-            const classNameDisplay = selectedClass === "ALL" ? "SEMUA KELAS" : `KELAS: ${selectedClass}`;
-            document.getElementById('displayClassName').innerHTML = classNameDisplay;
-            const formattedStart = formatDateLocal(startDateRaw);
-            const formattedEnd = formatDateLocal(endDateRaw);
-            document.getElementById('printDateRange').innerHTML = `<i class="far fa-calendar-alt me-1"></i> Tempoh: ${formattedStart} hingga ${formattedEnd} (${totalSchoolDays} hari persekolahan)`;
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'Laporan Sedia',
-                text: `${studentReport.length} pelajar dianalisis dari ${totalSchoolDays} hari.`,
-                timer: 1800,
-                showConfirmButton: false,
-                background: '#1e293b',
-                color: '#fff'
-            });
+            Swal.close();
             
         } catch (error) {
-            console.error("Report error: ", error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Ralat Pangkalan Data',
-                text: 'Gagal memuatkan data. Pastikan sambungan internet aktif dan Firebase berfungsi.',
-                background: '#1e293b',
-                color: '#fff'
-            });
+            Swal.close();
+            Swal.fire('Ralat', 'Gagal memuatkan data', 'error');
         }
     }
     
-    // Helper: escape HTML untuk elakkan XSS
-    function escapeHtml(str) {
-        if (!str) return "";
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
+    // Load report on page load
+    setTimeout(() => {
+        if (document.getElementById('reportDate').value) loadReport();
+    }, 500);
     
-    // Format tarikh local (dd/mm/yyyy)
-    function formatDateLocal(dateString) {
-        if (!dateString) return "";
-        const parts = dateString.split('-');
-        if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        return dateString;
-    }
-    
-    // Optional: generate laporan awal pada load jika mahu (memudahkan user)
-    window.addEventListener('load', () => {
-        // Pra-set label tarikh: sudah set value secara lalai
-        // Boleh terus generate laporan ringkas? tapi biar user klik sendiri supaya tidak terkejut
-        console.log("Attend-X Laporan sedia | Tekan JANA LAPORAN");
-    });
-    
-    // attach global function
-    window.generateReport = generateReport;
+    window.loadReport = loadReport;
 </script>
-
-<!-- Additional print style patch -->
-<style>
-    @media print {
-        .stat-card {
-            break-inside: avoid;
-        }
-        .table-custom td, .table-custom th {
-            padding: 0.5rem;
-        }
-        body {
-            padding: 0;
-            margin: 0;
-        }
-        .glass-card {
-            padding: 0.8rem !important;
-        }
-        .print-only {
-            display: block !important;
-        }
-        footer, .no-print {
-            display: none;
-        }
-        .badge-percent {
-            border: 1px solid #333;
-            background: #f9f9f9 !important;
-            color: #000 !important;
-        }
-    }
-    .print-only {
-        display: none;
-    }
-</style>
 </body>
 </html>
