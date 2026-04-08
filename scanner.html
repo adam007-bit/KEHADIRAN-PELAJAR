@@ -2,115 +2,187 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attend-X Pro | SMK Putra Secure Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Attend-X Pro | SMK Putra Secure Geofence Scanner</title>
     
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- Libraries -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     
+    <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Plus+Jakarta+Sans:wght@400;600&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --neon-blue: #6366f1; --dark-bg: #020617; }
-        body { background: var(--dark-bg); color: white; font-family: 'Plus Jakarta Sans', sans-serif; min-height: 100vh; }
+        :root { 
+            --neon-blue: #4f46e5; 
+            --neon-cyan: #06b6d4;
+            --dark-deep: #020617;
+            --card-glass: rgba(15, 23, 42, 0.85);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: radial-gradient(ellipse at 30% 40%, #0f172a, #030712);
+            color: #f1f5f9; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            min-height: 100vh;
+        }
         
+        /* Header Futuristic */
         .header-section { 
-            padding: 15px 0; 
-            border-bottom: 1px solid rgba(255,255,255,0.1); 
-            background: rgba(15, 23, 42, 0.9); 
-            backdrop-filter: blur(10px); 
-            position: sticky; top: 0; z-index: 100; 
+            padding: 18px 24px; 
+            border-bottom: 1px solid rgba(99, 102, 241, 0.4);
+            background: rgba(2, 6, 23, 0.75);
+            backdrop-filter: blur(16px);
+            position: sticky; 
+            top: 0; 
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .system-title { 
+            font-family: 'Orbitron', monospace; 
+            background: linear-gradient(135deg, #a5f3fc, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 800;
+            letter-spacing: 1px;
         }
         
-        #reader { 
-            width: 100% !important; 
-            border: 4px solid var(--neon-blue) !important; 
-            border-radius: 25px !important; 
+        /* QR Reader Premium Style */
+        #reader {
+            width: 100% !important;
+            border: 3px solid var(--neon-cyan) !important;
+            border-radius: 28px !important;
             overflow: hidden;
-            box-shadow: 0 0 25px rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.5);
             background: #000 !important;
+            transition: 0.2s;
         }
-
+        #reader video {
+            border-radius: 24px;
+        }
+        
+        /* Log container */
         .log-box { 
-            background: rgba(30, 41, 59, 0.4); 
-            border-radius: 25px; 
-            height: 480px; 
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(12px);
+            border-radius: 28px; 
+            height: 500px; 
             overflow-y: auto; 
-            padding: 15px; 
-            border: 1px solid rgba(255,255,255,0.1); 
+            padding: 1rem; 
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
         }
-
         .attendance-card { 
-            background: rgba(15, 23, 42, 0.9); 
-            border-radius: 15px; 
-            padding: 12px 15px; 
-            margin-bottom: 10px; 
-            border-left: 5px solid #10b981; 
+            background: linear-gradient(105deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+            border-radius: 20px; 
+            padding: 14px 18px; 
+            margin-bottom: 12px; 
+            border-left: 6px solid #10b981; 
+            transition: all 0.2s;
+            backdrop-filter: blur(4px);
         }
-        .attendance-card.lewat { border-left-color: #ef4444; }
-        .system-title { font-family: 'Orbitron', sans-serif; color: #38bdf8; font-size: 1.2rem; }
-
-        /* Custom Scrollbar */
-        .log-box::-webkit-scrollbar { width: 5px; }
-        .log-box::-webkit-scrollbar-thumb { background: var(--neon-blue); border-radius: 10px; }
+        .attendance-card.lewat { border-left-color: #f97316; background: linear-gradient(105deg, rgba(51, 35, 35, 0.9), rgba(30, 20, 30, 0.9));}
+        .attendance-card:hover { transform: translateX(6px); }
+        
+        .glow-btn {
+            background: linear-gradient(95deg, #4f46e5, #7c3aed);
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            transition: all 0.2s;
+            box-shadow: 0 6px 14px rgba(79, 70, 229, 0.4);
+        }
+        .glow-btn:hover {
+            transform: scale(1.02);
+            background: linear-gradient(95deg, #6366f1, #8b5cf6);
+        }
+        .badge-geo {
+            background: rgba(6, 182, 212, 0.2);
+            color: #67e8f9;
+            border: 1px solid #06b6d4;
+        }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #0f172a; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 10px; }
+        
+        @media (max-width: 768px) {
+            .log-box { height: 380px; }
+        }
+        .blink-text {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; text-shadow: 0 0 5px cyan; }
+        }
     </style>
 </head>
 <body>
 
-    <audio id="beepAudio" preload="auto">
-        <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg">
-    </audio>
-
     <div class="header-section mb-4">
-        <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+        <div class="container-fluid px-3 px-lg-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div>
-                <h1 class="system-title fw-bold m-0">ATTEND-X SCANNER</h1>
-                <small class="text-muted" id="currentDate">Memuatkan...</small>
+                <h1 class="system-title fw-bold m-0 fs-2"><i class="fas fa-shield-alt me-2 text-info"></i> ATTEND-X SECURE</h1>
+                <small class="text-secondary-emphasis d-flex align-items-center gap-1"><i class="fas fa-map-pin text-danger"></i> Geofence SMK Putra (150m radius)</small>
             </div>
             <div class="text-end">
-                <h3 class="m-0 fw-bold text-info" id="clock">00:00:00</h3>
-                <span class="badge bg-primary px-3 rounded-pill"><i class="fas fa-map-marker-alt me-1"></i> SMK PUTRA</span>
+                <h3 class="m-0 fw-bold text-cyan-300" id="clock" style="font-family: monospace; font-size: 1.8rem;">--:--:--</h3>
+                <span class="badge bg-dark px-3 py-2 rounded-pill border border-info"><i class="fas fa-school me-1"></i> SMK PUTRA · Kampus Pintar</span>
             </div>
         </div>
     </div>
 
-    <div class="container-fluid px-3 px-lg-5">
+    <div class="container-fluid px-3 px-lg-5 pb-5">
         <div class="row g-4">
-            <div class="col-lg-6 text-center">
-                <div id="reader"></div>
-                <div class="d-flex gap-2 mt-3">
-                    <button onclick="manualCheckIn()" class="btn btn-outline-info rounded-pill px-4 py-3 fw-bold w-100">
-                        <i class="fas fa-keyboard me-2"></i>INPUT MANUAL
+            <!-- Left: Scanner Section -->
+            <div class="col-lg-6">
+                <div class="bg-dark bg-opacity-40 rounded-4 p-3 p-lg-4 border border-secondary border-opacity-25">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-info"><i class="fas fa-camera me-2"></i>IMBAS KAD QR</h5>
+                        <span class="badge badge-geo rounded-pill px-3 py-2"><i class="fas fa-satellite-dish me-1"></i> Live GPS Check</span>
+                    </div>
+                    <div id="reader"></div>
+                    <button onclick="manualCheckIn()" class="btn glow-btn w-100 mt-4 py-3 fw-bold text-white rounded-pill">
+                        <i class="fas fa-keyboard me-2"></i> MASUKKAN ID MANUAL
                     </button>
+                    <p class="mt-3 small text-center text-muted">
+                        <i class="fas fa-location-dot text-warning me-1"></i> Sistem akan mengesahkan lokasi anda sebelum merekod kehadiran
+                    </p>
                 </div>
-                <p class="mt-3 text-muted small"><i class="fas fa-shield-alt me-1"></i> Sistem dilindungi Geofencing GPS (Radius 150m)</p>
             </div>
 
+            <!-- Right: Live Logs -->
             <div class="col-lg-6">
-                <h6 class="mb-3 text-info fw-bold text-uppercase">
-                    <i class="fas fa-history me-2"></i>Log Kehadiran Hari Ini
-                </h6>
-                <div id="log" class="log-box">
-                    <div id="placeholder" class="text-center py-5 text-muted">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold text-uppercase mb-0 text-info-emphasis"><i class="fas fa-clock me-2"></i>LOG KEHADIRAN (HARI INI)</h6>
+                    <button onclick="refreshLogs()" class="btn btn-sm btn-outline-light rounded-pill px-3"><i class="fas fa-sync-alt me-1"></i> Refresh</button>
+                </div>
+                <div id="logContainer" class="log-box">
+                    <div id="placeholderLog" class="text-center py-5 text-muted">
                         <i class="fas fa-qrcode fa-3x mb-3 opacity-25"></i>
-                        <p>Sila scan kod QR anda atau masukkan ID secara manual.</p>
+                        <p class="mb-0">Tiada rekod kehadiran buat masa ini.<br>Imbas kad atau input ID untuk mula.</p>
                     </div>
+                    <div id="dynamicLogs"></div>
                 </div>
             </div>
         </div>
     </div>
+
+    <audio id="successBeep" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="errorBeep" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2570/2570-preview.mp3" type="audio/mpeg">
+    </audio>
 
     <script>
-        // --- 1. CONFIGURATIONS ---
-        const SMK_PUTRA_LAT = 6.443152; 
-        const SMK_PUTRA_LNG = 100.215234;
-        const RADIUS_BENAR = 0.15; // 150 meter limit
-
+        // =================  FIREBASE CONFIGURATION  =================
         const firebaseConfig = {
             apiKey: "AIzaSyA03bLm1Ztt6TzF-jzOa9CpjZn7mEYtIlQ",
             authDomain: "kehadiran-47efc.firebaseapp.com",
@@ -119,150 +191,329 @@
             storageBucket: "kehadiran-47efc.firebasestorage.app",
             appId: "1:523088126436:web:6fb51d9888bcd18f7267f1"
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-        // --- 2. CLOCK & UI HELPERS ---
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString('ms-MY');
-            document.getElementById('currentDate').innerText = now.toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-        }, 1000);
+        // =================  GEOLOCATION CONSTANTS (SMK PUTRA)  =================
+        const SCHOOL_LAT = 6.443152;      // Latitud SMK Putra (contoh)
+        const SCHOOL_LNG = 100.215234;    // Longitud SMK Putra
+        const ALLOWED_RADIUS_KM = 0.15;   // 150 meter
 
+        // Helper: distance in km (Haversine)
         function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; 
+            const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c; 
+            return R * c;
         }
 
-        // --- 3. SCANNER ENGINE ---
-        const html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-            fps: 10, 
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0
-        });
-        html5QrcodeScanner.render((decodedText) => recordAttendance(decodedText, "QR SCAN"));
+        // Global scanner instance
+        let html5QrScanner = null;
+        
+        // Function to initialize scanner (clean previous)
+        function initScanner() {
+            if (html5QrScanner && typeof html5QrScanner.clear === 'function') {
+                html5QrScanner.clear().catch(e => console.warn("clear err", e));
+            }
+            const scannerElem = document.getElementById("reader");
+            if (scannerElem) scannerElem.innerHTML = "";
+            html5QrScanner = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 260, height: 260 }, aspectRatio: 1.0 };
+            html5QrScanner.start({ facingMode: "environment" }, config, (decodedText) => {
+                recordAttendance(decodedText.trim(), "QR SCAN");
+            }, (error) => { /* silent */ });
+        }
 
-        // --- 4. CORE LOGIC (GPS + FIREBASE) ---
-        function recordAttendance(id, method) {
-            // Loading alert
-            Swal.fire({
-                title: 'Mengesahkan Lokasi...',
-                text: 'Sila tunggu sementara kami menyemak GPS.',
-                allowOutsideClick: false,
-                background: '#1e293b',
-                color: '#fff',
-                didOpen: () => { Swal.showLoading(); }
-            });
-
-            if (!navigator.geolocation) {
-                Swal.close();
-                return Swal.fire('Ralat', 'Browser tidak sokong GPS.', 'error');
+        // Main attendance logic with GPS & Firebase
+        function recordAttendance(studentId, methodType) {
+            // Validate ID tidak kosong
+            if (!studentId || studentId === "") {
+                playBeep(false);
+                Swal.fire({
+                    icon: 'warning', title: 'ID Tidak Sah',
+                    text: 'Kod QR tidak mengandungi ID pelajar yang sah.', background: '#1e293b', color: '#fff'
+                });
+                return;
             }
 
-            navigator.geolocation.getCurrentPosition((position) => {
+            Swal.fire({
+                title: 'Mengesahkan Lokasi GPS',
+                text: 'Sedang mengesahkan radius sekolah...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading(),
+                background: '#1e293b'
+            });
+
+            // Geolocation check
+            if (!navigator.geolocation) {
+                Swal.close();
+                Swal.fire('Ralat', 'Peranti anda tidak menyokong GPS. Sila guna peranti moden.', 'error');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
                 const userLat = position.coords.latitude;
                 const userLng = position.coords.longitude;
-                const jarak = calculateDistance(userLat, userLng, SMK_PUTRA_LAT, SMK_PUTRA_LNG);
+                const distanceKm = calculateDistance(userLat, userLng, SCHOOL_LAT, SCHOOL_LNG);
+                const distanceMeters = (distanceKm * 1000).toFixed(0);
 
-                // GEOFENCE CHECK
-                if (jarak > RADIUS_BENAR) {
+                // Geofencing validation
+                if (distanceKm > ALLOWED_RADIUS_KM) {
                     Swal.close();
-                    return Swal.fire({
-                        title: 'LUAR KAWASAN!',
-                        text: `Anda dikesan berada ${(jarak * 1000).toFixed(0)}m dari SMK Putra. Sila scan di lokasi sekolah sahaja.`,
+                    playBeep(false);
+                    Swal.fire({
+                        title: '❌ LUAR KAWASAN SEKOLAH',
+                        html: `Anda berada <strong class="text-warning">${distanceMeters} meter</strong> dari pusat SMK Putra.<br>Kehadiran hanya dibenarkan dalam radius 150m.`,
                         icon: 'error',
                         background: '#1e293b',
-                        color: '#fff'
+                        color: '#fff',
+                        confirmButtonText: 'OK'
                     });
+                    return;
                 }
 
-                // PROSES KE FIREBASE
-                const now = new Date();
-                const today = now.toISOString().split('T')[0];
-
-                db.ref(`kehadiran/${today}/${id}`).once('value').then(snap => {
-                    Swal.close();
-                    if(snap.exists()) {
-                        return Swal.fire({
-                            title: 'Sudah Hadir',
-                            text: 'Anda telah merekodkan kehadiran hari ini.',
-                            icon: 'info',
-                            timer: 2000,
-                            showConfirmButton: false,
-                            background: '#1e293b',
-                            color: '#fff'
+                // proceed: check student data
+                const today = new Date().toISOString().split('T')[0];
+                const currentTime = new Date();
+                const timeStr = currentTime.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                
+                try {
+                    // 1) Check if student exists in 'pelajar' node
+                    const studentSnap = await database.ref(`pelajar/${studentId}`).once('value');
+                    if (!studentSnap.exists()) {
+                        Swal.close();
+                        playBeep(false);
+                        Swal.fire({
+                            title: 'ID Tidak Berdaftar',
+                            text: `ID ${studentId} tiada dalam pangkalan data pelajar. Sila hubungi admin.`,
+                            icon: 'error',
+                            background: '#1e293b'
                         });
+                        return;
                     }
-
-                    db.ref('pelajar/' + id).once('value').then(studentSnap => {
-                        if(studentSnap.exists()) {
-                            const user = studentSnap.val();
-                            document.getElementById('beepAudio').play();
-                            if (navigator.vibrate) navigator.vibrate(200);
-
-                            const time = now.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' });
-                            const status = (now.getHours() > 7 || (now.getHours() == 7 && now.getMinutes() > 30)) ? "LEWAT" : "HADIR";
-
-                            db.ref(`kehadiran/${today}/${id}`).set({
-                                name: user.name, 
-                                class: user.class, 
-                                time: time, 
-                                status: status, 
-                                method: method,
-                                loc: `${userLat.toFixed(6)},${userLng.toFixed(6)}`
-                            }).then(() => {
-                                // Voice Greeting
-                                const speech = new SpeechSynthesisUtterance(`Selamat datang ${user.name}`);
-                                speech.lang = 'ms-MY';
-                                window.speechSynthesis.speak(speech);
-
-                                updateUI(user.name, user.class, time, status);
-                            });
-                        } else {
-                            Swal.fire({ title: 'ID Tidak Sah', text: 'ID pelajar ini tidak ditemui dalam sistem.', icon: 'warning', background: '#1e293b', color: '#fff' });
-                        }
+                    const studentData = studentSnap.val();
+                    const studentName = studentData.name || "Pelajar";
+                    const studentClass = studentData.class || "Kelas tidak ditetapkan";
+                    
+                    // 2) Check attendance for today
+                    const attendanceSnap = await database.ref(`kehadiran/${today}/${studentId}`).once('value');
+                    if (attendanceSnap.exists()) {
+                        Swal.close();
+                        playBeep(false);
+                        Swal.fire({
+                            title: 'Kehadiran sudah direkod',
+                            text: `${studentName} telah hadir hari ini pada pukul ${attendanceSnap.val().time || "sebelum ini"}.`,
+                            icon: 'info',
+                            background: '#1e293b',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        return;
+                    }
+                    
+                    // Determine status (Hadir / Lewat) -> cut-off: 7:30 AM
+                    const hour = currentTime.getHours();
+                    const minute = currentTime.getMinutes();
+                    let status = "HADIR";
+                    if (hour > 7 || (hour === 7 && minute > 30)) {
+                        status = "LEWAT";
+                    }
+                    
+                    // 3) Save attendance record
+                    const attendanceRecord = {
+                        name: studentName,
+                        class: studentClass,
+                        time: timeStr,
+                        status: status,
+                        method: methodType,
+                        timestamp: Date.now(),
+                        location: `${userLat.toFixed(6)}, ${userLng.toFixed(6)}`,
+                        distanceFromSchool: `${distanceMeters}m`
+                    };
+                    
+                    await database.ref(`kehadiran/${today}/${studentId}`).set(attendanceRecord);
+                    
+                    // Success feedback
+                    playBeep(true);
+                    // Voice greeting (selamat datang)
+                    const utterance = new SpeechSynthesisUtterance(`Selamat datang ${studentName}`);
+                    utterance.lang = 'ms-MY';
+                    utterance.rate = 0.9;
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.speak(utterance);
+                    
+                    Swal.fire({
+                        title: status === "HADIR" ? '✅ Kehadiran Disahkan' : '⚠️ Kehadiran (Lewat)',
+                        html: `<strong>${studentName}</strong><br>Kelas: ${studentClass}<br>Masa: ${timeStr}<br>Status: <span class="fw-bold">${status}</span><br><small>Lokasi dalam radius ${distanceMeters}m</small>`,
+                        icon: status === "HADIR" ? 'success' : 'warning',
+                        background: '#1e293b',
+                        color: '#fff',
+                        timer: 2800,
+                        showConfirmButton: false
                     });
-                });
-
+                    
+                    // Append ke log UI
+                    appendToLog(studentName, studentClass, timeStr, status);
+                    
+                } catch (error) {
+                    console.error(error);
+                    Swal.close();
+                    playBeep(false);
+                    Swal.fire('Ralat Sistem', 'Gagal menyambung ke pangkalan data.', 'error');
+                }
             }, (error) => {
                 Swal.close();
-                Swal.fire('GPS Gagal', 'Sila hidupkan lokasi telefon anda dan benarkan akses (Allow).', 'warning');
-            }, { enableHighAccuracy: true });
+                playBeep(false);
+                let errorMsg = "Sila pastikan GPS dihidupkan dan benarkan akses lokasi.";
+                if (error.code === 1) errorMsg = "Akses lokasi dinafikan. Sila benarkan kebenaran GPS dalam tetapan.";
+                else if (error.code === 2) errorMsg = "GPS tidak dapat dikesan. Cuba lagi.";
+                Swal.fire({ title: 'GPS diperlukan', text: errorMsg, icon: 'warning', background: '#1e293b' });
+            }, { enableHighAccuracy: true, timeout: 12000 });
         }
 
-        function updateUI(name, kelas, time, status) {
-            if(document.getElementById('placeholder')) document.getElementById('placeholder').remove();
-            const html = `
-                <div class="attendance-card ${status == 'LEWAT' ? 'lewat' : ''} animate__animated animate__fadeInDown">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="fw-bold">${name}</div>
-                            <small class="text-muted">${kelas} • ${time}</small>
-                        </div>
-                        <span class="badge ${status == 'LEWAT' ? 'bg-danger' : 'bg-success'} rounded-pill">${status}</span>
+        // Play beep sound for success/error
+        function playBeep(success) {
+            const audio = success ? document.getElementById('successBeep') : document.getElementById('errorBeep');
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log("Audio play error"));
+            }
+            if (success && navigator.vibrate) navigator.vibrate(100);
+        }
+
+        // Append card to dynamic logs (today's log)
+        function appendToLog(name, className, time, status) {
+            const logsDiv = document.getElementById('dynamicLogs');
+            const placeholder = document.getElementById('placeholderLog');
+            if (placeholder) placeholder.style.display = 'none';
+            
+            const card = document.createElement('div');
+            card.className = `attendance-card animate__animated animate__fadeInRight ${status === 'LEWAT' ? 'lewat' : ''}`;
+            card.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold fs-6">${escapeHtml(name)}</div>
+                        <small class="text-secondary-emphasis"><i class="fas fa-users me-1"></i> ${escapeHtml(className)} • ${time}</small>
                     </div>
-                </div>`;
-            document.getElementById('log').insertAdjacentHTML('afterbegin', html);
+                    <span class="badge ${status === 'LEWAT' ? 'bg-warning text-dark' : 'bg-success'} rounded-pill px-3 py-2">${status}</span>
+                </div>
+                <div class="mt-1 small text-info-emphasis"><i class="fas fa-check-circle me-1"></i> Imbasan selamat (geofence)</div>
+            `;
+            logsDiv.prepend(card);
+            
+            // Limit logs displayed (optional)
+            if (logsDiv.children.length > 25) logsDiv.removeChild(logsDiv.lastChild);
         }
 
+        // Refresh logs from Firebase (today)
+        async function refreshLogs() {
+            const today = new Date().toISOString().split('T')[0];
+            const logsContainer = document.getElementById('dynamicLogs');
+            const placeholder = document.getElementById('placeholderLog');
+            
+            try {
+                const attendanceSnap = await database.ref(`kehadiran/${today}`).once('value');
+                const records = attendanceSnap.val() || {};
+                logsContainer.innerHTML = '';
+                const recordArray = Object.entries(records).map(([id, data]) => ({ id, ...data }));
+                recordArray.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+                
+                if (recordArray.length === 0) {
+                    if (placeholder) placeholder.style.display = 'block';
+                    logsContainer.innerHTML = '';
+                } else {
+                    if (placeholder) placeholder.style.display = 'none';
+                    for (let rec of recordArray) {
+                        const card = document.createElement('div');
+                        card.className = `attendance-card ${rec.status === 'LEWAT' ? 'lewat' : ''} animate__animated animate__fadeInUp`;
+                        card.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold">${escapeHtml(rec.name)}</div>
+                                    <small class="text-secondary-emphasis">${escapeHtml(rec.class)} • ${rec.time || "?"}</small>
+                                </div>
+                                <span class="badge ${rec.status === 'LEWAT' ? 'bg-warning text-dark' : 'bg-success'} rounded-pill">${rec.status || 'HADIR'}</span>
+                            </div>
+                            <div class="mt-1 small text-info-emphasis"><i class="fas fa-qrcode me-1"></i> Kaedah: ${rec.method || "QR"} </div>
+                        `;
+                        logsContainer.appendChild(card);
+                    }
+                }
+            } catch (err) {
+                console.error("Refresh log error", err);
+            }
+        }
+
+        // Manual ID entry
         function manualCheckIn() {
             Swal.fire({
-                title: 'Input Manual ID',
+                title: 'Masukkan ID Pelajar',
                 input: 'text',
-                inputPlaceholder: 'Masukkan ID Pelajar...',
+                inputPlaceholder: 'cth: 050101020304 atau ID unik',
+                showCancelButton: true,
+                confirmButtonText: 'Sahkan & Hadir',
+                cancelButtonText: 'Batal',
                 background: '#1e293b',
                 color: '#fff',
-                showCancelButton: true,
-                confirmButtonText: 'Semak Lokasi & Hadir'
-            }).then(res => { 
-                if(res.value) recordAttendance(res.value, "MANUAL"); 
+                inputValidator: (value) => {
+                    if (!value || value.trim() === "") return "ID tidak boleh kosong!";
+                    return null;
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    recordAttendance(result.value.trim(), "MANUAL INPUT");
+                }
             });
         }
+        
+        // Helper escape
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        // Clock updater
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('ms-MY', { hour12: false });
+            requestAnimationFrame(() => setTimeout(updateClock, 500));
+        }
+        
+        // Auto-initialize everything when page loads
+        window.addEventListener('load', () => {
+            updateClock();
+            // Check camera permissions gracefully
+            setTimeout(() => {
+                initScanner().catch(err => {
+                    console.warn("Scanner init error, retry: ", err);
+                    setTimeout(() => initScanner(), 800);
+                });
+            }, 200);
+            refreshLogs();
+            // Auto refresh logs setiap 7 saat
+            setInterval(() => refreshLogs(), 7000);
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (html5QrScanner && typeof html5QrScanner.stop === 'function') {
+                html5QrScanner.stop().catch(e=>null);
+            }
+        });
+        
+        // expose functions globally
+        window.manualCheckIn = manualCheckIn;
+        window.refreshLogs = refreshLogs;
+        window.recordAttendance = recordAttendance;
     </script>
 </body>
 </html>
